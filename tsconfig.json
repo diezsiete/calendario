@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "module": "es2020",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "paths": {
+      "@components/*": ["assets/components/*"],
+      "@styles/*": ["assets/styles/*"]
+    },
+    "jsx": "react"
+  },
+  "include": ["assets/**/*"]
+}
