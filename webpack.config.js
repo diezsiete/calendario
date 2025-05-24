@@ -62,7 +62,15 @@ Encore
     })
 
     // enables Sass/SCSS support
-    .enableSassLoader()
+    .enableSassLoader(function(options) {
+        options.sassOptions.silenceDeprecations = [
+            "color-functions", // bootstrap
+            "global-builtin", // bootstrap
+            "import", // bootstrap
+            "legacy-js-api",
+            "mixed-decls", // bootstrap
+        ];
+    })
 
     // uncomment if you use TypeScript
     .enableTypeScriptLoader()

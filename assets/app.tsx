@@ -7,5 +7,8 @@ const root = createRoot(document.getElementById("root"));
 root.render(
     <StrictMode>
         <h1>Calendario</h1>
+        <div className="alert alert-primary" role="alert">
+            A simple primary alert—check it out!
+        </div>
     </StrictMode>
 );
