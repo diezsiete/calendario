@@ -10,7 +10,7 @@
       "@components/*": ["assets/components/*"],
       "@styles/*": ["assets/styles/*"]
     },
-    "jsx": "react"
+    "jsx": "react-jsx"
   },
   "include": ["assets/**/*"]
 }

@@ -84,6 +84,21 @@ Encore
 
     // uncomment if you're having problems with a jQuery plugin
     //.autoProvidejQuery()
+
+    .configureDevServerOptions(options => {
+        // options.allowedHosts = 'all';
+        // options.server = {
+        //     type: 'http',
+        // }
+        options.server = {
+            type: 'https',
+            options: {
+                key: '/Users/joseguerrero/certs/calendario.key',
+                cert: '/Users/joseguerrero/certs/calendario.crt',
+            }
+        }
+        options.host = 'calendario';
+    })
 ;
 
 module.exports = Encore.getWebpackConfig();
