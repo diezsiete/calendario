@@ -1,46 +1,66 @@
-import { ReactNode, useEffect, useRef} from "react";
+import { ReactNode, Ref, useEffect, useImperativeHandle, useRef, useState } from "react";
 import BootstrapModal from 'bootstrap/js/dist/modal';
 
-type ModalProps = {
-    id: string,
-    show: boolean,
+export interface ModalHandle {
+    display: (show: boolean) => void;
+    show: () => void;
+    hide: () => void;
+}
+export type ModalProps = {
+    id?: string,
     children: ReactNode,
     size?: 'sm'|'md'|'lg'|'xl',
-    title?: string
+    title?: string,
+    onShown?: () => void;
+    onHidden?: () => void;
+    ref?: Ref<ModalHandle>
 };
 
 export default function Modal({
     id,
     children,
-    show = false,
-    size = "md", // sm, md, lg, xl
-    title
-} : ModalProps ) {
-
+    size = "md",
+    title,
+    onShown,
+    onHidden,
+    ref,
+}: ModalProps) {
+    const [show, setShow] = useState(false);
     const modalRef = useRef(null);
     const modalInstanceRef = useRef(null);
+    const onShownRef = useRef(onShown);
+    const onHiddenRef = useRef(onHidden);
+
+    useImperativeHandle(ref, () => ({
+        display: (show: boolean) => setShow(show),
+        show: () => setShow(true),
+        hide: () => setShow(false),
+    }));
 
     useEffect(() => {
-        if (modalRef.current) {
+        if (modalRef.current && !modalInstanceRef.current) {
             // Initialize Bootstrap Modal
             modalInstanceRef.current = new BootstrapModal(modalRef.current);
-            console.log('modal created')
+            // console.log('modal created')
 
-            // // Event listeners
-            // const modalElement = modalRef.current;
-            // modalElement.addEventListener('show.bs.modal', onShow);
-            // modalElement.addEventListener('hide.bs.modal', () => {
-            //     onHide();
-            //     onClose();
-            // });
+            const handleShown = () => onShownRef.current?.();
+            const handleHidden = () => {
+                setShow(false);
+                onHiddenRef.current?.();
+            }
+
+            // Event listeners
+            const modalElement = modalRef.current;
+            modalElement.addEventListener('shown.bs.modal', handleShown);
+            modalElement.addEventListener('hidden.bs.modal', handleHidden);
 
             return () => {
-                // modalElement.removeEventListener('show.bs.modal', onShow);
-                // modalElement.removeEventListener('hide.bs.modal', onHide);
-
+                modalElement.removeEventListener('shown.bs.modal', handleShown);
+                modalElement.removeEventListener('hidden.bs.modal', handleHidden);
                 // Dispose of modal instance
                 if (modalInstanceRef.current) {
                     modalInstanceRef.current.dispose();
+                    modalInstanceRef.current = null;
                 }
             };
         }
@@ -50,42 +70,37 @@ export default function Modal({
         if (modalInstanceRef.current) {
             if (show) {
                 modalInstanceRef.current.show();
-                console.log('modal show')
             } else {
                 modalInstanceRef.current.hide();
-                console.log('modal hide')
             }
         }
     }, [show]);
 
-    const getSizeClass = () => {
-        switch (size) {
-            case 'sm': return 'modal-sm';
-            case 'lg': return 'modal-lg';
-            case 'xl': return 'modal-xl';
-            default: return '';
-        }
-    };
-
     return (
         <div className="modal fade" id={id} tabIndex={-1} aria-labelledby={title && id + 'Label'} aria-hidden="true" ref={modalRef}>
-            <div className={`modal-dialog ${getSizeClass()}`}>
+            <div className={`modal-dialog ${getSizeClass(size)}`}>
                 <div className="modal-content">
                     {title && (
                         <div className="modal-header">
-                            <h1 className="modal-title fs-5" id={id + 'Label'}>{title}</h1>
+                            <h1 className="modal-title fs-5" id={id ? id + 'Label' : id}>{title}</h1>
                             <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                     )}
-                    <div className="modal-body">
-                        {children}
-                    </div>
-                    <div className="modal-footer">
-                        <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" className="btn btn-primary">Save changes</button>
-                    </div>
+                    {children}
                 </div>
             </div>
         </div>
     )
 }
+
+export const ModalBody = ({ children }: { children: ReactNode }) => <div className="modal-body">{children}</div>;
+export const ModalFooter = ({ children }: { children: ReactNode }) => <div className="modal-footer">{children}</div>;
+
+const getSizeClass = (size: ModalProps['size']) => {
+    switch (size) {
+        case 'sm': return 'modal-sm';
+        case 'lg': return 'modal-lg';
+        case 'xl': return 'modal-xl';
+        default: return '';
+    }
+};

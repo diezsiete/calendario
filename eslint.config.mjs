@@ -19,4 +19,9 @@ export default defineConfig([
     pluginReact.configs.flat.recommended,
     pluginReact.configs.flat['jsx-runtime'],
     reactHooks.configs['recommended-latest'],
+    {
+        rules: {
+            "@typescript-eslint/no-explicit-any": "off"
+        }
+    },
 ]);

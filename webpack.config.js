@@ -24,6 +24,7 @@ Encore
     .addEntry('app', './assets/app.tsx')
     .addAliases({
         '@components': path.resolve(__dirname, 'assets/components'),
+        '@lib': path.resolve(__dirname, 'assets/lib'),
         '@styles': path.resolve(__dirname, 'assets/styles'),
     })
 
