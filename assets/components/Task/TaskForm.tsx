@@ -1,27 +1,16 @@
-import {ChangeEvent, KeyboardEvent, Ref, useEffect, useImperativeHandle, useRef, useState} from "react";
+import { ChangeEvent, KeyboardEvent, Ref, useEffect, useState } from "react";
 import classNames from "classnames";
+import Form, { FormHandle } from '@components/Form/Form';
 import { TaskData } from "@type/Model";
 
 type TaskFormSimpleProps = {
     task?: TaskData,
     onSuccess?: (data: TaskData) => void,
-    ref?: Ref<TaskFormHandle>
+    ref?: Ref<FormHandle>
 };
-export interface TaskFormHandle {
-    requestSubmit: () => void;
-    focus: () => void;
-}
-
 export default function TaskForm({ task, onSuccess, ref } : TaskFormSimpleProps) {
-    const formRef = useRef<HTMLFormElement>(null);
-    const nameRef = useRef<HTMLInputElement>(null);
     const [violations, setViolations] = useState<Record<string, boolean|string>>({});
     const [data, setData] = useState<TaskData>(task)
-
-    useImperativeHandle(ref, () => ({
-        requestSubmit: () => formRef.current?.requestSubmit(),
-        focus: () => nameRef.current?.focus()
-    }));
 
     useEffect(() => {
         setData(task);
@@ -48,7 +37,7 @@ export default function TaskForm({ task, onSuccess, ref } : TaskFormSimpleProps)
 
     function validate(name: string, value: string): boolean {
         let violation = false;
-        if (!value.trim()) {
+        if (name === 'name' && !value.trim()) {
             violation = true;
         }
         setViolations(prev => ({...prev, [name]: violation}))
@@ -66,12 +55,9 @@ export default function TaskForm({ task, onSuccess, ref } : TaskFormSimpleProps)
     }
 
     return (
-        <form noValidate ref={formRef} onSubmit={e => {
-            e.preventDefault();
-            submit();
-        }}>
+        <Form preventDefault onSubmit={submit} ref={ref}>
             <div className="form-floating mb-3">
-                <input type="text" id="taskName" placeholder="Nombre" name='name' ref={nameRef}
+                <input type="text" id="taskName" placeholder="Nombre" name='name'
                        value={data.name} onChange={e => handleInputChange(e)}
                        className={classNames('form-control', {'is-invalid': !!violations.name})} />
                 <label htmlFor="taskName">Nombre</label>
@@ -84,6 +70,6 @@ export default function TaskForm({ task, onSuccess, ref } : TaskFormSimpleProps)
                           className={classNames('form-control', {'is-invalid': !!violations.description})}></textarea>
                 <label htmlFor="taskDescription">Descripción</label>
             </div>
-        </form>
+        </Form>
     )
 }

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import {ReactNode, useRef, useState} from "react";
 import Modal, { ModalProps, ModalBody, ModalFooter, ModalHandle } from "@components/Modal/Modal";
 
 type ConfirmProps = Omit<ModalProps, 'onHidden'> & {
@@ -30,18 +30,22 @@ export default function ModalConfirm(props: ConfirmProps) {
     </Modal>
 }
 
-export function useModalConfirm() {
-    const modalConfirmRef = useRef<ModalHandle>(null);
+export function useModalConfirm(defaultMessage: ReactNode = 'ok') {
+    const [message, setMessage] = useState(defaultMessage);
+    const ref = useRef<ModalHandle>(null);
     const resolveRef = useRef(null);
-    const waitConfirm = () => new Promise((resolve) => {
-        resolveRef.current = resolve;
-        modalConfirmRef.current?.show();
-    });
-    const handleModalConfirm = (confirm: boolean) => {
+    const waitConfirm = (message?: ReactNode) => {
+        setMessage(message ?? defaultMessage);
+        return new Promise((resolve) => {
+            resolveRef.current = resolve;
+            ref.current?.show();
+        });
+    };
+    const handleConfirm = (confirm: boolean) => {
         resolveRef.current?.(confirm);
         resolveRef.current = null;
-        modalConfirmRef.current?.hide();
+        ref.current?.hide();
     };
 
-    return [modalConfirmRef, waitConfirm, handleModalConfirm] as const;
+    return {message, ref, waitConfirm, handleConfirm};
 }

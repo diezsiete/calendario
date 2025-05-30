@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Timer from "@components/Timer";
-import TaskForm, { TaskFormHandle } from "@components/Task/TaskForm";
+import { FormHandle } from "@components/Form/Form";
+import TaskForm from "@components/Task/TaskForm";
 import ModalConfirm, {useModalConfirm} from "@components/Modal/ModalConfirm";
 import { ModalHandle } from "@components/Modal/Modal";
 import { Task, TaskData } from "@type/Model";
@@ -9,10 +10,10 @@ import TaskCard from "@components/Task/TaskCard";
 
 export default function TaskGrid() {
     const [tasks, setTasks] = useState<Task[]>([]);
-    const taskFormRef = useRef<TaskFormHandle>(null);
+    const taskFormRef = useRef<FormHandle>(null);
     const [formData, setFormData] = useState<TaskData>({name: '', description: ''});
     const modalTaskFormRef = useRef<ModalHandle>(null);
-    const [modalDeleteRef, confirmDelete, handleModalConfirm] = useModalConfirm()
+    const modalDelete = useModalConfirm()
 
     useEffect(() => {
         fetchTasks();
@@ -28,7 +29,7 @@ export default function TaskGrid() {
     }
 
 
-    function handleTaskFormModalConfirm(confirm: boolean) {
+    function handleModalTaskForm(confirm: boolean) {
         if (confirm) {
             taskFormRef.current?.requestSubmit();
         } else {
@@ -41,8 +42,7 @@ export default function TaskGrid() {
     }
 
     const handleTaskDelete = async (task: Task) => {
-        const confirmed = await confirmDelete();
-        if (confirmed) {
+        if (await modalDelete.waitConfirm(<>Seguro eliminar <b>{task.name}</b></>)) {
             deleteTask(task).then(() => fetchTasks())
         }
     };
@@ -54,17 +54,17 @@ export default function TaskGrid() {
         </button>
 
         {tasks.map(task => <TaskCard key={task.id} task={task}
-            onDelete={handleTaskDelete}
-            onEdit={task => showTaskModal(true, task)}
+                                     onDelete={handleTaskDelete}
+                                     onEdit={task => showTaskModal(true, task)}
         />)}
 
         <ModalConfirm id='modalTaskForm' title='Crear tarea' size='xl' ref={modalTaskFormRef}
-                      onShown={() => taskFormRef.current.focus()} onConfirm={handleTaskFormModalConfirm}>
+                      onShown={() => taskFormRef.current.focus()} onConfirm={handleModalTaskForm}>
             <TaskForm task={formData} ref={taskFormRef} onSuccess={handleTaskFormSuccess} />
         </ModalConfirm>
 
-        <ModalConfirm id='modalDelete' onConfirm={handleModalConfirm} ref={modalDeleteRef} confirmLabel='Eliminar'>
-            Seguro eliminar?
+        <ModalConfirm id='modalDelete' onConfirm={modalDelete.handleConfirm} ref={modalDelete.ref} confirmLabel='Eliminar'>
+            {modalDelete.message}
         </ModalConfirm>
     </>
 }

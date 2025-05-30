@@ -55,6 +55,7 @@ export async function deleteTask(task: Task) {
     const db = await initDB();
     await deleteTaskTimers(task.id);
     await db.delete(STORE_TASKS, task.id);
+    removeLocalTimer(task.name);
 }
 
 const taskStartedTimers: Map<string, { task: Task, timer: Timer }> = new Map;
@@ -71,9 +72,7 @@ export async function startTaskTimer(task: Task): Promise<Timer> {
 
 export async function stopTaskTimer(task: Task, timerId: number): Promise<Timer|null> {
     const timer = await updateTimer(timerId, Math.floor(Date.now() / 1000));
-    if (timer) {
-        taskStartedTimers.delete(task.name);
-    }
+    taskStartedTimers.delete(task.name);
     return timer;
 }
 export async function updateTimer(id: number, end: number): Promise<Timer|null> {
@@ -147,6 +146,7 @@ const fixIncompleteTimers = async (name: string, timers: Timer[]): Promise<Timer
 }
 
 window.addEventListener('beforeunload', async () => {
+    console.log('beforeunload CALLED AND IT SHOULDNT');
     for (const [name, taskTimer] of taskStartedTimers) {
         const localSeconds = getLocalTimer(name);
         const missingSeconds = localSeconds !== null ? localSeconds - getTimersTotal(await getTaskTimers(taskTimer.task)) : -1;
