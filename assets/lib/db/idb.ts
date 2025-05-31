@@ -60,20 +60,26 @@ export async function deleteTask(task: Task) {
 
 const taskStartedTimers: Map<string, { task: Task, timer: Timer }> = new Map;
 
-export async function startTaskTimer(task: Task): Promise<Timer> {
-    const db = await initDB();
-    const timer: TimerData = { start: Math.floor(Date.now() / 1000) };
-    timer.taskId = task.id;
-    const id = await db.add(STORE_TIMERS, timer);
-    timer.id = id as number;
-    taskStartedTimers.set(task.name, { task, timer: timer as Timer });
-    return timer as Timer;
+export async function startTaskTimer(task: Task, start?: number): Promise<Timer> {
+    const timer = await createTimer(start ?? Math.floor(Date.now() / 1000), task.id);
+    taskStartedTimers.set(task.name, { task, timer });
+    return timer;
 }
-
-export async function stopTaskTimer(task: Task, timerId: number): Promise<Timer|null> {
-    const timer = await updateTimer(timerId, Math.floor(Date.now() / 1000));
+export async function stopTaskTimer(task: Task, timerId: number, end?: number): Promise<Timer|null> {
+    const timer = await updateTimer(timerId, end ?? Math.floor(Date.now() / 1000));
     taskStartedTimers.delete(task.name);
     return timer;
+}
+
+export async function createTimer(start: number, taskId?: number): Promise<Timer> {
+    const db = await initDB();
+    const timer: TimerData = { start };
+    if (taskId) {
+        timer.taskId = taskId;
+    }
+    const id = await db.add(STORE_TIMERS, timer);
+    timer.id = id as number;
+    return timer as Timer;
 }
 export async function updateTimer(id: number, end: number): Promise<Timer|null> {
     const db = await initDB();
@@ -146,7 +152,6 @@ const fixIncompleteTimers = async (name: string, timers: Timer[]): Promise<Timer
 }
 
 window.addEventListener('beforeunload', async () => {
-    console.log('beforeunload CALLED AND IT SHOULDNT');
     for (const [name, taskTimer] of taskStartedTimers) {
         const localSeconds = getLocalTimer(name);
         const missingSeconds = localSeconds !== null ? localSeconds - getTimersTotal(await getTaskTimers(taskTimer.task)) : -1;

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import Timer from "@components/Timer";
+import { StopWatchLocalStorage } from "@components/StopWatch";
 import { FormHandle } from "@components/Form/Form";
 import TaskForm from "@components/Task/TaskForm";
 import ModalConfirm, {useModalConfirm} from "@components/Modal/ModalConfirm";
@@ -28,7 +28,6 @@ export default function TaskGrid() {
         modalTaskFormRef.current?.display(show);
     }
 
-
     function handleModalTaskForm(confirm: boolean) {
         if (confirm) {
             taskFormRef.current?.requestSubmit();
@@ -48,7 +47,7 @@ export default function TaskGrid() {
     };
 
     return <>
-        <Timer name='primer'/>
+        <StopWatchLocalStorage name='primer'/>
         <button type="button" className="btn btn-outline-primary" onClick={() => showTaskModal(true)}>
             Crear tarea
         </button>

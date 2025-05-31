@@ -5,4 +5,9 @@ export const toSlug = (str: string): string => str
     .replace(/[^\w-]+/g, '') // Remove all non-word characters
     .replace(/--+/g, '-')    // Replace multiple - with single -
     .replace(/^-+/, '')      // Trim - from start of text
-    .replace(/-+$/, '')      // Trim - from end of text
+    .replace(/-+$/, '');     // Trim - from end of text
+
+export const formatSeconds = (seconds: number): string =>
+    Math.floor(seconds / 3600).toString().padStart(2, '0') + ':' +
+    Math.floor((seconds % 3600) / 60).toString().padStart(2, '0') + ':' +
+    (seconds % 60).toString().padStart(2, '0');
