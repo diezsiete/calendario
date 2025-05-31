@@ -5,7 +5,7 @@ import TaskForm from "@components/Task/TaskForm";
 import ModalConfirm, {useModalConfirm} from "@components/Modal/ModalConfirm";
 import { ModalHandle } from "@components/Modal/Modal";
 import { Task, TaskData } from "@type/Model";
-import { deleteTask, getAllTasks, upsertTask } from '@lib/db/idb';
+import { deleteTask, getAllTasks, upsertTask } from '@lib/idb/tasks';
 import TaskCard from "@components/Task/TaskCard";
 
 export default function TaskGrid() {

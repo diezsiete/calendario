@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { StopWatchTask } from "@components/StopWatch";
 import { Task, Timer } from "@type/Model";
-import { getCompleteTaskTimers, getTimersTotal, startTaskTimer, stopTaskTimer} from '@lib/db/idb';
+import { getCompleteTaskTimers, getTimersTotal, startTaskTimer, stopTaskTimer} from '@lib/idb/tasks';
 
 type TaskCardProps = { task: Task, onEdit?: (task: Task) => void, onDelete?: (task: Task) => void };
 
