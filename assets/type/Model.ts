@@ -1,5 +1,3 @@
-import { DBSchema } from 'idb';
-
 export type Task = {
     id: number;
     name: string;
@@ -14,16 +12,3 @@ export type Timer = {
     taskId?: number;
 }
 export type TimerData = Omit<Timer, 'id'> & {id?: number};
-
-
-export interface CalendarioIDB extends DBSchema {
-    'tasks': {
-        key: number;
-        value: Task;
-    };
-    timers: {
-        value: Timer;
-        key: number;
-        indexes: { 'taskId': number };
-    };
-}

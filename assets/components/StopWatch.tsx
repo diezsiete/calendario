@@ -4,11 +4,15 @@ import {getLocalTimer, removeLocalTimer, setLocalTimer} from '@lib/db/local-time
 import { formatSeconds } from "@lib/varchar";
 
 type StopWatchProps = {
-    seconds?: number, onStart?: (start: number) => void, onEnd?: (end: number) => void, onSecond?: (elapsedTime: number) => void
+    seconds?: number,
+    onStart?: (start: number) => void,
+    onEnd?: (end: number) => void,
+    onSecond?: (elapsedTime: number) => void,
+    className?: string
 };
 type StopWatchTaskProps = { name: string } & Omit<StopWatchProps, 'onSecond'>;
 
-export default function StopWatch({ seconds, onStart, onEnd, onSecond }: StopWatchProps) {
+export default function StopWatch({ seconds, onStart, onEnd, onSecond, className }: StopWatchProps) {
     const initialSeconds = useRef(seconds ?? 0);
     const [elapsedTime, setElapsedTime] = useState(seconds ?? 0);
     const [isRunning, setIsRunning] = useState(false);
@@ -59,10 +63,10 @@ export default function StopWatch({ seconds, onStart, onEnd, onSecond }: StopWat
     };
 
     return (
-        <button type="button" className={classNames('btn', 'btn-lg', {
+        <button type="button" className={classNames('btn', {
             'btn-primary' : isRunning,
             'btn-secondary' : !isRunning,
-        })} onClick={toggleTimer}>
+        }, className)} onClick={toggleTimer}>
             {formatSeconds(elapsedTime)}
         </button>
     )
@@ -83,7 +87,7 @@ export function StopWatchTask(props: StopWatchTaskProps) {
     return <StopWatch onSecond={secondHandler} onEnd={endHandler} {...stopWatchProps} />
 }
 
-export function StopWatchLocalStorage({ name } : { name: string }) {
+export function StopWatchLocalStorage({ name, className } : { name: string, className?: string }) {
     const [seconds, setSeconds] = useState(0);
     const start = useRef(0)
 
@@ -95,5 +99,5 @@ export function StopWatchLocalStorage({ name } : { name: string }) {
 
     const endHandler = (end: number) => setSeconds(prev => prev + (end - start.current));
 
-    return <StopWatch seconds={seconds} onStart={startHandler} onSecond={secondHandler} onEnd={endHandler}  />
+    return <StopWatch seconds={seconds} onStart={startHandler} onSecond={secondHandler} onEnd={endHandler} className={className}  />
 }
