@@ -1,4 +1,4 @@
-import  {IDBPDatabase, openDB } from "idb";
+import { IDBPDatabase, openDB } from "idb";
 import { STORE_TASKS, STORE_TIMERS } from "@lib/idb/idb";
 
 const dbs: Record<string, IDBPDatabase> = {};
