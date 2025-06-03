@@ -1,0 +1,28 @@
+.task.modal {
+    .modal-content {
+        //border: var(--bs-modal-border-width) solid var(--bs-modal-border-color);
+        border: none;
+    }
+    .modal-header {
+        --bs-modal-header-padding: 0;
+        //border-bottom: var(--bs-modal-header-border-width) solid var(--bs-modal-header-border-color);
+        border: none;
+        input {
+            padding: 1rem;
+            font-size: 1.25rem;
+            font-weight: 500;
+            border-bottom-right-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+    }
+    .modal-body {
+        border-right:  var(--bs-modal-border-width) solid var(--bs-modal-border-color);
+        border-left:  var(--bs-modal-border-width) solid var(--bs-modal-border-color);
+    }
+    .modal-footer {
+        border: var(--bs-modal-border-width) solid var(--bs-modal-border-color);
+    }
+    textarea {
+        height: 150px;
+    }
+}

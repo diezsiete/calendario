@@ -1,12 +1,12 @@
 import { ActionDispatch, createContext, ReactNode, useContext, useEffect, useReducer, useRef } from "react";
-import { FormHandle } from "@components/Form/Form";
+import Form, { FormHandle } from "@components/Form/Form";
 import Modal, { ModalBody, ModalFooter, ModalHandle } from "@components/Modal/Modal";
-import { useHandleConfirm } from "@components/Modal/ModalConfirm";
-import TaskForm from "@components/Task/TaskForm";
+import { TaskDescription, TaskName, useTaskForm } from "@components/Task/TaskForm";
 import { Task, TaskData } from "@type/Model";
 import { taskDataEmpty } from "@lib/model";
 import { deleteTask, upsertTask } from "@lib/idb/tasks";
 import ConfirmButton, { ConfirmButtonHandle } from "@components/Form/ConfirmButton";
+import '@styles/components/task/task-modal.scss';
 
 type TaskModalState = { task: TaskData|Task, show: boolean, upserted: boolean };
 type TaskModalReducerActionType = 'newTaskOpened'|'editTaskOpened'|'modalClosed'|'taskUpserted'
@@ -34,49 +34,43 @@ export default function TaskModal() {
     const modalTaskFormRef = useRef<ModalHandle>(null);
     const taskFormRef = useRef<FormHandle>(null);
     const deleteConfirmRef = useRef<ConfirmButtonHandle>(null);
-    const handleConfirm = useHandleConfirm(confirm => {
-        if (confirm) {
-            taskFormRef.current?.requestSubmit();
-        } else {
-            dispatch({type: 'modalClosed'})
-        }
-    });
+    const { data, violations, updateField, submit } = useTaskForm(context.task)
 
     useEffect(() => {
         modalTaskFormRef.current?.display(context.show);
+        if (!context.show) {
+            deleteConfirmRef.current?.reset();
+        }
     }, [context.show]);
 
-    function handleTaskFormSuccess(task: TaskData) {
-        upsertTask(task).then(() => dispatch({type: 'taskUpserted'}))
-    }
+    const handleTaskUpsert = (task: TaskData) => upsertTask(task).then(() => dispatch({type: 'taskUpserted'}));
 
-    const handleTaskDelete = async (task: Task) => {
-        deleteTask(task).then(() => dispatch({type: 'taskUpserted'}))
-    };
-    function handleModalHidden() {
-        deleteConfirmRef.current?.reset();
-        handleConfirm(false, 'backdrop');
-    }
+    const handleTaskDelete = (task: Task) => deleteTask(task).then(() => dispatch({type: 'taskUpserted'}));
 
     return <>
-        <Modal id='modalTaskForm' size='xl' ref={modalTaskFormRef} title={context.task.id ? 'Editar tarea' : 'Crear tarea'}
-               onShown={() => taskFormRef.current.focus()}
-               onHidden={() => handleModalHidden()}>
-            <ModalBody>
-                <TaskForm task={context.task} ref={taskFormRef} onSuccess={handleTaskFormSuccess}/>
-            </ModalBody>
-            <ModalFooter>
-                {context.task.id &&
-                    <div className='flex-grow-1'>
-                        <ConfirmButton onConfirm={() => handleTaskDelete(context.task as Task)} ref={deleteConfirmRef}/>
-                    </div>}
-                <button type="button" className="btn btn-secondary" onClick={() => handleConfirm(false, 'button')}>
-                    Cancelar
-                </button>
-                <button type="button" className="btn btn-primary" onClick={() => handleConfirm(true, 'button')}>
-                    Guardar
-                </button>
-            </ModalFooter>
+        <Modal id='modalTaskForm' size='xl' ref={modalTaskFormRef} className='task'
+               onShown={() => !context.task.id && taskFormRef.current.focus()}
+               onHidden={() => dispatch({type: 'modalClosed'})}>
+            <Form preventDefault onSubmit={() => submit(handleTaskUpsert)} ref={taskFormRef}>
+                <div className="modal-header">
+                    <TaskName value={data.name} violation={violations.name} onChange={updateField} />
+                </div>
+                <ModalBody>
+                    <TaskDescription value={data.description} violation={violations.description} onChange={updateField} onShiftEnter={() => submit(handleTaskUpsert)} />
+                </ModalBody>
+                <ModalFooter>
+                    {context.task.id &&
+                        <div className='flex-grow-1'>
+                            <ConfirmButton onConfirm={() => handleTaskDelete(context.task as Task)} ref={deleteConfirmRef}/>
+                        </div>}
+                    <button type="button" className="btn btn-secondary" onClick={() => dispatch({type: 'modalClosed'})}>
+                        Cancelar
+                    </button>
+                    <button className="btn btn-primary">
+                        Guardar
+                    </button>
+                </ModalFooter>
+            </Form>
         </Modal>
     </>
 }

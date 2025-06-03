@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { MouseEvent, useEffect, useRef, useState } from "react";
 import classNames from "classnames";
 import {getLocalTimer, removeLocalTimer, setLocalTimer} from '@lib/db/local-timer';
 import { formatSeconds } from "@lib/varchar";
@@ -52,7 +52,8 @@ export default function StopWatch({ seconds, onStart, onEnd, onSecond, className
         return () => clearInterval(interval);
     }, [isRunning]);
 
-    const toggleTimer = () => {
+    const toggleTimer = (e: MouseEvent) => {
+        e.stopPropagation();
         if (!isRunning) {
             startTime.current = Date.now();
             onStart?.(Math.floor(startTime.current / 1000));
@@ -65,7 +66,7 @@ export default function StopWatch({ seconds, onStart, onEnd, onSecond, className
     return (
         <button type="button" className={classNames('btn', 'timer-button', {
             'btn-primary' : isRunning,
-            'btn-secondary' : !isRunning,
+            'btn-outline-secondary' : !isRunning,
         }, className)} onClick={toggleTimer}>
             {formatSeconds(elapsedTime)}
         </button>

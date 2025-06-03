@@ -7,9 +7,10 @@ export interface ModalHandle {
     hide: () => void;
 }
 export type ModalProps = {
-    id?: string,
     children: ReactNode,
+    id?: string,
     size?: 'sm'|'md'|'lg'|'xl',
+    className?: string,
     title?: string,
     onShown?: () => void;
     onHidden?: () => void;
@@ -20,6 +21,7 @@ export default function Modal({
     id,
     children,
     size = "md",
+    className,
     title,
     onShown,
     onHidden,
@@ -36,6 +38,13 @@ export default function Modal({
         show: () => setShow(true),
         hide: () => setShow(false),
     }));
+
+    useEffect(() => {
+        onShownRef.current = onShown;
+    }, [onShown]);
+    useEffect(() => {
+        onHiddenRef.current = onHidden;
+    }, [onHidden]);
 
     useEffect(() => {
         if (modalRef.current && !modalInstanceRef.current) {
@@ -77,7 +86,7 @@ export default function Modal({
     }, [show]);
 
     return (
-        <div className="modal fade" id={id} tabIndex={-1} aria-labelledby={title && id + 'Label'} ref={modalRef}>
+        <div className={'modal fade' + (className ? ` ${className}` : '')} id={id} tabIndex={-1} aria-labelledby={title && id + 'Label'} ref={modalRef}>
             <div className={`modal-dialog ${getSizeClass(size)}`}>
                 <div className="modal-content">
                     {title && (

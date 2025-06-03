@@ -23,11 +23,11 @@ export default function ConfirmButton(props: ConfirmButtonProps) {
         };
 
         return <div className='confirm-button-component position-relative d-inline-block'>
-            <button className={`primary-button btn ${isConfirming ? 'btn-secondary' : 'btn-outline-danger'}`}
+            <button type="button" className={`primary-button btn ${isConfirming ? 'btn-secondary' : 'btn-outline-danger'}`}
                     onClick={() => setIsConfirming(prev => !prev)}>
                 {isConfirming ? 'Cancelar' : 'Eliminar'}
             </button>
-            <button className={`confirm-button btn btn-danger${isConfirming ? ' visible' : ''}`} onClick={handleConfirm}>
+            <button type="button" className={`confirm-button btn btn-danger${isConfirming ? ' visible' : ''}`} onClick={handleConfirm}>
                 Seguro?
             </button>
         </div>;
