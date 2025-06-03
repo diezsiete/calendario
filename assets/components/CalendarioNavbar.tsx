@@ -3,6 +3,7 @@ import Dropdown, { DropdownItemButton } from "@components/Dropdown";
 import { TaskModalDispatch } from "@components/Task/TaskModal";
 import { exportIdb, handleUploadRestoreFile } from '@lib/idb/idb';
 import { StopWatchLocalStorage } from "@components/StopWatch";
+import EyeCare from "@components/EyeCare/EyeCare";
 
 export default function CalendarioNavbar() {
     const inputFileRef = useRef<HTMLInputElement>(null);
@@ -29,6 +30,7 @@ export default function CalendarioNavbar() {
                             </button>
                         </li>
                     </ul>
+                    <EyeCare className='me-2' />
                     <StopWatchLocalStorage name='primer' className='me-2' />
                     <Dropdown title='Backup' menuEnd>
                         <DropdownItemButton onClick={exportIdb}>Export DB</DropdownItemButton>

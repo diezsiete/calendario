@@ -63,7 +63,7 @@ export default function StopWatch({ seconds, onStart, onEnd, onSecond, className
     };
 
     return (
-        <button type="button" className={classNames('btn', {
+        <button type="button" className={classNames('btn', 'timer-button', {
             'btn-primary' : isRunning,
             'btn-secondary' : !isRunning,
         }, className)} onClick={toggleTimer}>

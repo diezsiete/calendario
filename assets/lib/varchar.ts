@@ -11,3 +11,7 @@ export const formatSeconds = (seconds: number): string =>
     Math.floor(seconds / 3600).toString().padStart(2, '0') + ':' +
     Math.floor((seconds % 3600) / 60).toString().padStart(2, '0') + ':' +
     (seconds % 60).toString().padStart(2, '0');
+
+export const formatMinutes = (seconds: number): string =>
+    Math.floor((seconds % 3600) / 60).toString().padStart(2, '0') + ':' +
+    (seconds % 60).toString().padStart(2, '0');
