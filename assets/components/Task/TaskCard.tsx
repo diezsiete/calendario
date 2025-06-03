@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { StopWatchTask } from "@components/StopWatch";
 import { Task, Timer } from "@type/Model";
 import { getCompleteTaskTimers, getTimersTotal, startTaskTimer, stopTaskTimer} from '@lib/idb/tasks';
+import '@styles/components/task/task-card.scss'
+import classNames from "classnames";
 
-type TaskCardProps = { task: Task, onEdit?: (task: Task) => void, onDelete?: (task: Task) => void };
+type TaskCardProps = { task: Task, className?: string, onEdit?: (task: Task) => void };
 
-export default function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
+export default function TaskCard({ task, className, onEdit }: TaskCardProps) {
     const taskCurrentTimer = useRef<Timer>(null);
     const [timerSeconds, setTimerSeconds] = useState(0);
 
@@ -25,16 +27,10 @@ export default function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
     }
 
     return (
-        <div className='card'>
+        <div className={classNames('task card', className)} onClick={() => onEdit?.(task)}>
             <div className="card-body">
                 <h5 className="card-title">{task.name}</h5>
                 {task.description && <p className="card-text">{task.description}</p>}
-                <button className="btn btn-outline-success" onClick={() => onEdit(task)}>
-                    Edit
-                </button>
-                <button className="btn btn-outline-danger" onClick={() => onDelete(task)}>
-                    Delete
-                </button>
                 <StopWatchTask name={task.name} onStart={startTimerHandler} onEnd={endTimerHandler} seconds={timerSeconds} />
             </div>
         </div>

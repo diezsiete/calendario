@@ -1,14 +1,16 @@
 import { ActionDispatch, createContext, ReactNode, useContext, useEffect, useReducer, useRef } from "react";
 import { FormHandle } from "@components/Form/Form";
-import { ModalHandle } from "@components/Modal/Modal";
-import ModalConfirm from "@components/Modal/ModalConfirm";
+import Modal, { ModalBody, ModalFooter, ModalHandle } from "@components/Modal/Modal";
+import { useHandleConfirm } from "@components/Modal/ModalConfirm";
 import TaskForm from "@components/Task/TaskForm";
 import { Task, TaskData } from "@type/Model";
 import { taskDataEmpty } from "@lib/model";
-import { upsertTask } from "@lib/idb/tasks";
+import { deleteTask, upsertTask } from "@lib/idb/tasks";
+import ConfirmButton, { ConfirmButtonHandle } from "@components/Form/ConfirmButton";
 
 type TaskModalState = { task: TaskData|Task, show: boolean, upserted: boolean };
-type TaskModalReducerAction = {type: 'newTaskOpened'|'editTaskOpened'|'modalClosed'|'taskUpserted', task?: Task};
+type TaskModalReducerActionType = 'newTaskOpened'|'editTaskOpened'|'modalClosed'|'taskUpserted'
+type TaskModalReducerAction = {type: TaskModalReducerActionType, task?: Task};
 
 export const TaskModalContext = createContext<TaskModalState>(null);
 export const TaskModalDispatch = createContext<ActionDispatch<[action: TaskModalReducerAction]>>(null);
@@ -31,28 +33,52 @@ export default function TaskModal() {
     const dispatch = useContext(TaskModalDispatch);
     const modalTaskFormRef = useRef<ModalHandle>(null);
     const taskFormRef = useRef<FormHandle>(null);
-
-    useEffect(() => {
-        modalTaskFormRef.current?.display(context.show);
-    }, [context.show]);
-
-    function handleModalTaskForm(confirm: boolean) {
+    const deleteConfirmRef = useRef<ConfirmButtonHandle>(null);
+    const handleConfirm = useHandleConfirm(confirm => {
         if (confirm) {
             taskFormRef.current?.requestSubmit();
         } else {
             dispatch({type: 'modalClosed'})
         }
-    }
+    });
+
+    useEffect(() => {
+        modalTaskFormRef.current?.display(context.show);
+    }, [context.show]);
+
     function handleTaskFormSuccess(task: TaskData) {
         upsertTask(task).then(() => dispatch({type: 'taskUpserted'}))
     }
 
-    return (
-        <ModalConfirm id='modalTaskForm' title='Crear tarea' size='xl' ref={modalTaskFormRef}
-                      onShown={() => taskFormRef.current.focus()} onConfirm={handleModalTaskForm}>
-            <TaskForm task={context.task} ref={taskFormRef} onSuccess={handleTaskFormSuccess} />
-        </ModalConfirm>
-    )
+    const handleTaskDelete = async (task: Task) => {
+        deleteTask(task).then(() => dispatch({type: 'taskUpserted'}))
+    };
+    function handleModalHidden() {
+        deleteConfirmRef.current?.reset();
+        handleConfirm(false, 'backdrop');
+    }
+
+    return <>
+        <Modal id='modalTaskForm' size='xl' ref={modalTaskFormRef} title={context.task.id ? 'Editar tarea' : 'Crear tarea'}
+               onShown={() => taskFormRef.current.focus()}
+               onHidden={() => handleModalHidden()}>
+            <ModalBody>
+                <TaskForm task={context.task} ref={taskFormRef} onSuccess={handleTaskFormSuccess}/>
+            </ModalBody>
+            <ModalFooter>
+                {context.task.id &&
+                    <div className='flex-grow-1'>
+                        <ConfirmButton onConfirm={() => handleTaskDelete(context.task as Task)} ref={deleteConfirmRef}/>
+                    </div>}
+                <button type="button" className="btn btn-secondary" onClick={() => handleConfirm(false, 'button')}>
+                    Cancelar
+                </button>
+                <button type="button" className="btn btn-primary" onClick={() => handleConfirm(true, 'button')}>
+                    Guardar
+                </button>
+            </ModalFooter>
+        </Modal>
+    </>
 }
 
 function taskModalReducer(state: TaskModalState, action: TaskModalReducerAction): TaskModalState {

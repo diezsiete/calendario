@@ -77,13 +77,13 @@ export default function Modal({
     }, [show]);
 
     return (
-        <div className="modal fade" id={id} tabIndex={-1} aria-labelledby={title && id + 'Label'} aria-hidden="true" ref={modalRef}>
+        <div className="modal fade" id={id} tabIndex={-1} aria-labelledby={title && id + 'Label'} ref={modalRef}>
             <div className={`modal-dialog ${getSizeClass(size)}`}>
                 <div className="modal-content">
                     {title && (
                         <div className="modal-header">
                             <h1 className="modal-title fs-5" id={id ? id + 'Label' : id}>{title}</h1>
-                            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <button type="button" className="btn-close" data-bs-dismiss="modal" ></button>
                         </div>
                     )}
                     {children}

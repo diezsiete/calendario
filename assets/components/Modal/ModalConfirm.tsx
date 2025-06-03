@@ -7,15 +7,7 @@ type ConfirmProps = Omit<ModalProps, 'onHidden'> & {
 };
 export default function ModalConfirm(props: ConfirmProps) {
     const {onConfirm, children, ...modalProps} = props;
-    const prevCancelSource = useRef(null);
-
-    const handleConfirm = (confirm: boolean, source: string) => {
-        const emit = source !== 'backdrop' || prevCancelSource.current !== 'button';
-        prevCancelSource.current = source
-        if (emit) {
-            onConfirm?.(confirm);
-        }
-    }
+    const handleConfirm = useHandleConfirm(onConfirm);
 
     return <Modal {...modalProps} onHidden={() => handleConfirm(false, 'backdrop')} ref={props.ref}>
         <ModalBody>{children}</ModalBody>
@@ -48,4 +40,16 @@ export function useModalConfirm(defaultMessage: ReactNode = 'ok') {
     };
 
     return {message, ref, waitConfirm, handleConfirm};
+}
+
+export function useHandleConfirm(onConfirm?: (confirm: boolean) => void) {
+    const prevCancelSource = useRef(null);
+
+    return (confirm: boolean, source: string) => {
+        const emit = source !== 'backdrop' || prevCancelSource.current !== 'button';
+        prevCancelSource.current = source
+        if (emit) {
+            onConfirm?.(confirm);
+        }
+    }
 }

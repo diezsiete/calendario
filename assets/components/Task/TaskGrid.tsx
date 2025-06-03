@@ -1,7 +1,7 @@
 import {useContext, useEffect, useState} from "react";
 import ModalConfirm, {useModalConfirm} from "@components/Modal/ModalConfirm";
 import { Task } from "@type/Model";
-import { deleteTask, getAllTasks } from '@lib/idb/tasks';
+import { getAllTasks } from '@lib/idb/tasks';
 import TaskCard from "@components/Task/TaskCard";
 import { TaskModalContext, TaskModalDispatch } from "@components/Task/TaskModal";
 
@@ -28,16 +28,15 @@ export default function TaskGrid() {
         taskModalDispatch({type: 'editTaskOpened', task})
     }
 
-    const handleTaskDelete = async (task: Task) => {
-        if (await modalDelete.waitConfirm(<>Seguro eliminar <b>{task.name}</b></>)) {
-            deleteTask(task).then(() => fetchTasks())
-        }
-    };
-
     return <>
-        {tasks.map(task => <TaskCard key={task.id} task={task} onDelete={handleTaskDelete} onEdit={handleTaskEdit} />)}
+        <div className="container-fluid">
+            <div className="row">
+                {tasks.map(task => <TaskCard key={task.id} task={task} className='col-4' onEdit={handleTaskEdit} />)}
+            </div>
+        </div>
 
-        <ModalConfirm id='modalDelete' onConfirm={modalDelete.handleConfirm} ref={modalDelete.ref} confirmLabel='Eliminar'>
+        <ModalConfirm id='modalDelete' onConfirm={modalDelete.handleConfirm} ref={modalDelete.ref}
+                      confirmLabel='Eliminar'>
             {modalDelete.message}
         </ModalConfirm>
     </>
