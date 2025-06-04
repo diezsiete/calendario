@@ -2,7 +2,7 @@ import { MouseEvent, ReactNode, useEffect, useRef } from "react";
 import classNames from "classnames";
 import BootstrapDropdown from 'bootstrap/js/dist/dropdown';
 
-type DropdownProps = { title: string, children: ReactNode, menuEnd?: boolean };
+type DropdownProps = { title: string, children: ReactNode, menuEnd?: boolean, className?: string, btnClassName?: string };
 
 export default function Dropdown(props: DropdownProps) {
     const dropdownRef = useRef(null);
@@ -18,8 +18,8 @@ export default function Dropdown(props: DropdownProps) {
     }, []);
 
     return (
-        <div className="dropdown">
-            <button className="btn btn-outline-success dropdown-toggle" type="button" data-bs-toggle="dropdown"
+        <div className={classNames('dropdown', props.className)}>
+            <button className={classNames('btn dropdown-toggle', props.btnClassName)} type="button" data-bs-toggle="dropdown"
                     aria-expanded="false" ref={dropdownRef}>
                 {props.title}
             </button>

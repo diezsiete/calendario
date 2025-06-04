@@ -32,7 +32,7 @@ export default function CalendarioNavbar() {
                     </ul>
                     <EyeCare className='me-2' />
                     <StopWatchLocalStorage name='primer' className='me-2' />
-                    <Dropdown title='Backup' menuEnd>
+                    <Dropdown title='Backup' menuEnd btnClassName='btn-outline-success'>
                         <DropdownItemButton onClick={exportIdb}>Export DB</DropdownItemButton>
                         <DropdownItemButton onClick={handleImportClick}>
                             Import DB

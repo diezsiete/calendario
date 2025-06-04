@@ -1,0 +1,23 @@
+@import "@styles/abstract";
+
+$statuses: (
+    pending: $secondary,
+    developing: $warning,
+    done: $success
+);
+
+.task-status-select {
+    @each $status, $color in $statuses {
+        &.#{$status} {
+            background-color: transparent;
+            background-image: none;
+            padding: $form-select-padding-y $form-select-padding-x;
+            border-color: #{$color};
+            color: #{$color};
+            &:focus {
+                box-shadow: none;
+                border-color: #{$color};
+            }
+        }
+    }
+}

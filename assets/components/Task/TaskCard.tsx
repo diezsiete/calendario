@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import classNames from "classnames";
 import { StopWatchTask } from "@components/StopWatch";
 import { Task, Timer } from "@type/Model";
 import { getCompleteTaskTimers, getTimersTotal, startTaskTimer, stopTaskTimer} from '@lib/idb/tasks';
 import '@styles/components/task/task-card.scss'
-import classNames from "classnames";
+import TaskStatus from "@components/Task/TaskStatus";
 
 type TaskCardProps = { task: Task, className?: string, onEdit?: (task: Task) => void };
 
@@ -27,11 +28,15 @@ export default function TaskCard({ task, className, onEdit }: TaskCardProps) {
     }
 
     return (
-        <div className={classNames('task card', className)} onClick={() => onEdit?.(task)}>
-            <div className="card-body">
+        <div className={classNames('task card', className)}>
+            <div className="card-body" onClick={() => onEdit?.(task)}>
                 <h5 className="card-title">{task.name}</h5>
                 {task.description && <p className="card-text">{task.description}</p>}
-                <StopWatchTask name={task.name} onStart={startTimerHandler} onEnd={endTimerHandler} seconds={timerSeconds} />
+            </div>
+            <div className="card-footer d-flex justify-content-between">
+                <StopWatchTask name={task.name} onStart={startTimerHandler} onEnd={endTimerHandler}
+                               seconds={timerSeconds}/>
+                <TaskStatus task={task} />
             </div>
         </div>
     )

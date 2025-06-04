@@ -1,5 +1,7 @@
 .task.card {
-    cursor: pointer;
+    .card-body {
+        cursor: pointer;
+    }
     &:hover {
         border-color: rgba(255, 255, 255, 0.55);
     }
