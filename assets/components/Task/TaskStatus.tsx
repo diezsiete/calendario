@@ -1,27 +1,22 @@
 import { useEffect, useState } from "react";
-import { Task, TaskStatus } from "@type/Model";
+import { Task, TaskStatus as TypeTaskStatus } from "@type/Model";
 import '@styles/components/task/task-status.scss'
-import { upsertTask } from "@lib/idb/tasks";
 
-type TaskStatusProps = { task: Task }
+type TaskStatusProps = { task: Task, onChange: (status: TypeTaskStatus) => void }
 
-const statuses: Record<TaskStatus, string> = {'pending' : 'Sin empezar', 'developing': 'En desarrollo', 'done': 'Finalizada'};
+const statuses: Record<TypeTaskStatus, string> = {
+    'todo' : 'To Do', 'inprogress': 'In Progress', 'paused': 'Paused', 'done': 'Done'
+};
 
-export default function TaskStatus({ task } : TaskStatusProps ) {
-    const [selectedStatus, setSelectedStatus] = useState<TaskStatus>(task.status);
+export default function TaskStatus({ task, onChange } : TaskStatusProps ) {
+    const [selectedStatus, setSelectedStatus] = useState<TypeTaskStatus>(task.status);
 
-    useEffect(() => {
-        if (selectedStatus !== task.status) {
-            console.log('useEffect selectedStatus changed', selectedStatus);
-            task.status = selectedStatus;
-            upsertTask(task)
-        }
-    }, [selectedStatus, task]);
+    useEffect(() => setSelectedStatus(task.status), [task.status]);
 
     return <div>
-        <select className={`form-select task-status-select ${selectedStatus ?? 'pending'}`} id={`task-${task.id}-status-select`}
-                value={selectedStatus ?? 'pending'}
-                onChange={e => setSelectedStatus(e.target.value as TaskStatus)}
+        <select className={`form-select task-status-select ${selectedStatus}`} id={`task-${task.id}-status-select`}
+                value={selectedStatus}
+                onChange={e => onChange(e.target.value as TypeTaskStatus)}
         >
             {Object.keys(statuses).map(status =>
                 <option key={status} value={status}>{statuses[status]}</option>

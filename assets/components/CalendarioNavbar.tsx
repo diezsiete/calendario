@@ -1,13 +1,13 @@
 import { useContext, useRef } from "react";
 import Dropdown, { DropdownItemButton } from "@components/Dropdown";
-import { TaskModalDispatch } from "@components/Task/TaskModal";
+import { TaskDispatch } from "@lib/state/task";
 import { exportIdb, handleUploadRestoreFile } from '@lib/idb/idb';
 import { StopWatchLocalStorage } from "@components/StopWatch";
 import EyeCare from "@components/EyeCare/EyeCare";
 
 export default function CalendarioNavbar() {
     const inputFileRef = useRef<HTMLInputElement>(null);
-    const dispatch = useContext(TaskModalDispatch);
+    const dispatch = useContext(TaskDispatch);
 
     function handleImportClick() {
         if (!inputFileRef.current) return;

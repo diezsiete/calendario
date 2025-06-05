@@ -1,36 +1,16 @@
-import { ActionDispatch, createContext, ReactNode, useContext, useEffect, useReducer, useRef } from "react";
+import {useContext, useEffect, useRef } from "react";
 import Form, { FormHandle } from "@components/Form/Form";
 import Modal, { ModalBody, ModalFooter, ModalHandle } from "@components/Modal/Modal";
 import { TaskDescription, TaskName, useTaskForm } from "@components/Task/TaskForm";
 import { Task, TaskData } from "@type/Model";
-import { taskDataEmpty } from "@lib/model";
-import { deleteTask, upsertTask } from "@lib/idb/tasks";
+import { TaskContext, TaskDispatch } from "@lib/state/task";
+import { addTask, deleteTask, updateTask } from "@lib/idb/tasks";
 import ConfirmButton, { ConfirmButtonHandle } from "@components/Form/ConfirmButton";
 import '@styles/components/task/task-modal.scss';
 
-type TaskModalState = { task: TaskData|Task, show: boolean, upserted: boolean };
-type TaskModalReducerActionType = 'newTaskOpened'|'editTaskOpened'|'modalClosed'|'taskUpserted'
-type TaskModalReducerAction = {type: TaskModalReducerActionType, task?: Task};
-
-export const TaskModalContext = createContext<TaskModalState>(null);
-export const TaskModalDispatch = createContext<ActionDispatch<[action: TaskModalReducerAction]>>(null);
-
-export function TaskModalContextProvider({ children } : { children: ReactNode} ) {
-    const [state, dispatch] = useReducer(taskModalReducer, { task: taskDataEmpty(), show: false, upserted: false });
-
-    return (
-        <TaskModalContext.Provider value={state}>
-            <TaskModalDispatch value={dispatch}>
-                {children}
-                <TaskModal />
-            </TaskModalDispatch>
-        </TaskModalContext.Provider>
-    )
-}
-
 export default function TaskModal() {
-    const context = useContext(TaskModalContext);
-    const dispatch = useContext(TaskModalDispatch);
+    const context = useContext(TaskContext);
+    const dispatch = useContext(TaskDispatch);
     const modalTaskFormRef = useRef<ModalHandle>(null);
     const taskFormRef = useRef<FormHandle>(null);
     const deleteConfirmRef = useRef<ConfirmButtonHandle>(null);
@@ -43,9 +23,15 @@ export default function TaskModal() {
         }
     }, [context.show]);
 
-    const handleTaskUpsert = (task: TaskData) => upsertTask(task).then(() => dispatch({type: 'taskUpserted'}));
+    const handleTaskUpsert = (data: TaskData) => {
+        if (data.id) {
+            updateTask(data as Task).then(task => task && dispatch({type: 'taskUpdated', task}))
+        } else {
+            addTask(data).then(task => task && dispatch({type: 'taskInserted', task}))
+        }
+    };
 
-    const handleTaskDelete = (task: Task) => deleteTask(task).then(() => dispatch({type: 'taskUpserted'}));
+    const handleTaskDelete = (task: Task) => deleteTask(task).then(() => dispatch({type: 'taskDeleted', task: task}));
 
     return <>
         <Modal id='modalTaskForm' size='xl' ref={modalTaskFormRef} className='task'
@@ -73,24 +59,4 @@ export default function TaskModal() {
             </Form>
         </Modal>
     </>
-}
-
-function taskModalReducer(state: TaskModalState, action: TaskModalReducerAction): TaskModalState {
-    switch (action.type) {
-        case "newTaskOpened": {
-            return { task: taskDataEmpty(), show: true, upserted: false };
-        }
-        case 'editTaskOpened': {
-            return { task: action.task, show: true, upserted: false };
-        }
-        case 'modalClosed': {
-            return {...state, show: false, upserted: false };
-        }
-        case 'taskUpserted': {
-            return {...state, show: false, upserted: true };
-        }
-        default : {
-            throw Error('Unknown action: ' + action.type);
-        }
-    }
 }

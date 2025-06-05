@@ -1,9 +1,9 @@
-export type TaskStatus = 'pending'|'developing'|'done';
+export type TaskStatus = 'todo'|'inprogress'|'paused'|'done';
 export type Task = {
     id: number;
     name: string;
+    status: TaskStatus;
     description?: string;
-    status?: TaskStatus;
 }
 export type TaskData = Omit<Task, 'id'> & {id?: number};
 

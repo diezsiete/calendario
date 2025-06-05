@@ -5,6 +5,26 @@ import { Task, TaskData, Timer } from "@type/Model";
 
 const taskStartedTimers: Map<string, { task: Task, timer: Timer }> = new Map;
 
+export async function getAllTasks(): Promise<Task[]> {
+    return (await idb()).getAll(STORE_TASKS);
+}
+
+export async function getAllTasksWithCompleteTimers(): Promise<Task[]> {
+    const tasks = await getAllTasks();
+    for (const task of tasks) {
+        if (task.status === 'inprogress') {
+            await fixIncompleteTimers(task.name, await getTaskTimers(task));
+        }
+    }
+    return tasks
+}
+
+export async function getTaskById(id: number): Promise<Task|undefined> {
+    const db = await idb();
+    return db.get(STORE_TASKS, id);
+}
+
+
 export async function upsertTask(task: TaskData): Promise<void>  {
     const db = await idb();
     const tx = db.transaction(STORE_TASKS, 'readwrite');
@@ -12,14 +32,20 @@ export async function upsertTask(task: TaskData): Promise<void>  {
     await store.put(task); // `put` will update if `note.id` exists
     await tx.done;
 }
+export async function updateTask(task: Task, data?: Partial<TaskData>): Promise<Task|undefined>  {
+    const db = await idb();
+    const tx = db.transaction(STORE_TASKS, 'readwrite');
+    const store = tx.objectStore(STORE_TASKS);
+    const id = await store.put(data ? {...task, ...data} : task);
+    task = await store.get(id);
+    await tx.done;
+    return task;
+}
 
-// export async function addTask(task: Omit<Task, 'id'>) {
-//     const db = await initDB();
-//     await db.add(STORE_TASKS, task);
-// }
-
-export async function getAllTasks(): Promise<Task[]> {
-    return (await idb()).getAll(STORE_TASKS);
+export async function addTask(data: TaskData): Promise<Task|undefined> {
+    const db = await idb();
+    const id = await db.add(STORE_TASKS, data);
+    return db.get(STORE_TASKS, id);
 }
 
 export async function deleteTask(task: Task) {
@@ -34,7 +60,7 @@ export async function startTaskTimer(task: Task, start?: number): Promise<Timer>
     taskStartedTimers.set(task.name, { task, timer });
     return timer;
 }
-export async function stopTaskTimer(task: Task, timerId: number, end?: number): Promise<Timer|null> {
+export async function stopTaskTimer(task: Task, timerId: number, end?: number): Promise<Timer|undefined> {
     const timer = await updateTimer(timerId, end ?? Math.floor(Date.now() / 1000));
     taskStartedTimers.delete(task.name);
     return timer;
@@ -59,11 +85,6 @@ export async function getTaskTimers(task: Task): Promise<Timer[]> {
     const index = (await idb()).transaction(STORE_TIMERS).store.index('taskId');
     return index.getAll(task.id);
 }
-
-export async function getCompleteTaskTimers(task: Task): Promise<Timer[]> {
-    return fixIncompleteTimers(task.name, await getTaskTimers(task));
-}
-
 
 export const getTimersTotal = (timers: Timer[]): number =>
     timers.reduce((total, timer) => total + (timer.end && timer.start ? timer.end - timer.start : 0), 0);

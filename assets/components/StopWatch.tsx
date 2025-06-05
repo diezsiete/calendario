@@ -1,18 +1,21 @@
-import { MouseEvent, useEffect, useRef, useState } from "react";
+import { Ref, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import classNames from "classnames";
 import {getLocalTimer, removeLocalTimer, setLocalTimer} from '@lib/db/local-timer';
 import { formatSeconds } from "@lib/varchar";
 
+export type StopWatchHandle = { run: () => void, stop: () => void };
 type StopWatchProps = {
     seconds?: number,
     onStart?: (start: number) => void,
     onEnd?: (end: number) => void,
     onSecond?: (elapsedTime: number) => void,
-    className?: string
+    className?: string,
+    disabled?: boolean,
+    ref?: Ref<StopWatchHandle>,
 };
 type StopWatchTaskProps = { name: string } & Omit<StopWatchProps, 'onSecond'>;
 
-export default function StopWatch({ seconds, onStart, onEnd, onSecond, className }: StopWatchProps) {
+export default function StopWatch({ seconds, onStart, onEnd, onSecond, className, disabled, ref }: StopWatchProps) {
     const initialSeconds = useRef(seconds ?? 0);
     const [elapsedTime, setElapsedTime] = useState(seconds ?? 0);
     const [isRunning, setIsRunning] = useState(false);
@@ -20,6 +23,11 @@ export default function StopWatch({ seconds, onStart, onEnd, onSecond, className
     const stopRef = useRef(false);
     const onEndRef = useRef(onEnd);
     const onSecondRef = useRef(onSecond);
+
+    useImperativeHandle(ref, () => ({
+        run: () => run(),
+        stop: () => stop(),
+    }))
 
     useEffect(() => {
         onEndRef.current = onEnd
@@ -52,22 +60,19 @@ export default function StopWatch({ seconds, onStart, onEnd, onSecond, className
         return () => clearInterval(interval);
     }, [isRunning]);
 
-    const toggleTimer = (e: MouseEvent) => {
-        e.stopPropagation();
-        if (!isRunning) {
-            startTime.current = Date.now();
-            onStart?.(Math.floor(startTime.current / 1000));
-            setIsRunning(true);
-        } else {
-            stopRef.current = true;
-        }
-    };
+    const run = useCallback(() => {
+        startTime.current = Date.now();
+        stopRef.current = false;
+        onStart?.(Math.floor(startTime.current / 1000));
+        setIsRunning(true);
+    }, [onStart])
+    const stop = useCallback(() => stopRef.current = true, []);
 
     return (
         <button type="button" className={classNames('btn', 'timer-button', {
-            'btn-primary' : isRunning,
+            'btn-primary-alt' : isRunning,
             'btn-outline-secondary' : !isRunning,
-        }, className)} onClick={toggleTimer}>
+        }, className)} onClick={() => !isRunning ? run() : stop()} disabled={disabled}>
             {formatSeconds(elapsedTime)}
         </button>
     )

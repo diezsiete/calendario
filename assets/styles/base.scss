@@ -1,2 +1,9 @@
 @import "./abstract";
 @import "abstract/bootstrap";
+
+.btn-primary-alt {
+    @include button-variant($primary-alt,  darken($primary-alt, 3%));
+}
+.btn-outline-primary-alt {
+    @include button-outline-variant($primary-alt);
+}

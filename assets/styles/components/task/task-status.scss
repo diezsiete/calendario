@@ -1,8 +1,9 @@
 @import "@styles/abstract";
 
 $statuses: (
-    pending: $secondary,
-    developing: $warning,
+    //todo: $secondary,
+    inprogress: $primary-alt,
+    paused: $warning-alt,
     done: $success
 );
 
@@ -14,10 +15,21 @@ $statuses: (
             padding: $form-select-padding-y $form-select-padding-x;
             border-color: #{$color};
             color: #{$color};
+            @if $status != done {
+                cursor: pointer;
+            }
             &:focus {
                 box-shadow: none;
                 border-color: #{$color};
             }
+        }
+    }
+    &.todo {
+        cursor: pointer;
+        padding: $form-select-padding-y $form-select-padding-x;
+        &:focus {
+            box-shadow: none;
+            border-color: var(--bs-border-color);
         }
     }
 }
