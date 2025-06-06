@@ -1,18 +1,11 @@
-import { useContext, useRef } from "react";
-import Dropdown, { DropdownItemButton } from "@components/Dropdown";
+import { useContext } from "react";
 import { TaskDispatch } from "@lib/state/task";
-import { exportIdb, handleUploadRestoreFile } from '@lib/idb/idb';
 import { StopWatchLocalStorage } from "@components/StopWatch";
 import EyeCare from "@components/EyeCare/EyeCare";
+import DropdownDb from "@components/Db/DropdownDb";
 
 export default function CalendarioNavbar() {
-    const inputFileRef = useRef<HTMLInputElement>(null);
     const dispatch = useContext(TaskDispatch);
-
-    function handleImportClick() {
-        if (!inputFileRef.current) return;
-        inputFileRef.current.click();
-    }
 
     return (
         <nav className="navbar navbar-expand-lg bg-body-tertiary">
@@ -32,14 +25,7 @@ export default function CalendarioNavbar() {
                     </ul>
                     <EyeCare className='me-2' />
                     <StopWatchLocalStorage name='primer' className='me-2' />
-                    <Dropdown title='Backup' menuEnd btnClassName='btn-outline-success'>
-                        <DropdownItemButton onClick={exportIdb}>Export DB</DropdownItemButton>
-                        <DropdownItemButton onClick={handleImportClick}>
-                            Import DB
-                            <input className="d-none" type="file" accept=".json" onChange={handleUploadRestoreFile}
-                                   ref={inputFileRef}/>
-                        </DropdownItemButton>
-                    </Dropdown>
+                    <DropdownDb />
                 </div>
             </div>
         </nav>

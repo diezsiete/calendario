@@ -2,18 +2,25 @@ import { useContext, useEffect, useState } from "react";
 import ModalConfirm, { useModalConfirm } from "@components/Modal/ModalConfirm";
 import TaskCard from "@components/Task/TaskCard";
 import { TaskContext, TaskDispatch } from "@lib/state/task";
-import { getAllTasksWithCompleteTimers } from '@lib/idb/tasks';
+import { getAllTasks, getAllTasksWithCompleteTimers } from '@lib/idb/tasks';
 import { match } from "@lib/util";
 import { Task } from "@type/Model";
 import { useBreakpoint } from "@lib/react";
+import { DbContext } from "@components/Db/DbContextProvider";
 
 export default function TaskGrid() {
     const [tasks, setTasks] = useState<Task[]>([]);
+    const dbContext = useContext(DbContext);
     const context = useContext(TaskContext);
     const dispatch = useContext(TaskDispatch);
     const modalDelete = useModalConfirm();
     const columns = useMasonry(tasks);
 
+    useEffect(() => {
+        if (dbContext) {
+            getAllTasks().then(tasks => setTasks(tasks))
+        }
+    }, [dbContext]);
     useEffect(() => {
         getAllTasksWithCompleteTimers().then(tasks => setTasks(tasks));
     }, []);

@@ -7,3 +7,9 @@
 .btn-outline-primary-alt {
     @include button-outline-variant($primary-alt);
 }
+.btn-warning-alt {
+    @include button-variant($warning-alt,  darken($warning-alt, 3%));
+}
+.btn-outline-warning-alt {
+    @include button-outline-variant($warning-alt);
+}

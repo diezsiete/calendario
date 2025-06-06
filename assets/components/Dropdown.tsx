@@ -1,6 +1,7 @@
 import { MouseEvent, ReactNode, useEffect, useRef } from "react";
 import classNames from "classnames";
 import BootstrapDropdown from 'bootstrap/js/dist/dropdown';
+import '@styles/components/dropdown.scss'
 
 type DropdownProps = { title: string, children: ReactNode, menuEnd?: boolean, className?: string, btnClassName?: string };
 
@@ -31,9 +32,13 @@ export default function Dropdown(props: DropdownProps) {
         </div>
     )
 }
-
-export function DropdownItemButton({ children, onClick }: { children: ReactNode, onClick?: (e: MouseEvent) => void}) {
+type DropdownItemProps = { children: ReactNode, onClick?: (e: MouseEvent) => void, active?: boolean, className?: string};
+export function DropdownItemButton({ children, onClick, active, className }: DropdownItemProps) {
     return <li>
-        <button type='button' className="dropdown-item" onClick={e => onClick?.(e)}>{children}</button>
+        <button type='button' className={classNames('dropdown-item', {active}, className)} onClick={e => onClick?.(e)}>
+            {children}
+        </button>
     </li>
 }
+
+export const DropdownDivider = () => <li><hr className="dropdown-divider"/></li>

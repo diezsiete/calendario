@@ -1,0 +1,14 @@
+@import '@styles/abstract';
+
+.dropdown-item {
+    &.active, &:active {
+        &.success {
+            --#{$prefix}dropdown-link-active-color: white;
+            --#{$prefix}dropdown-link-active-bg: #{$success};
+        }
+        &.warning-alt {
+            --#{$prefix}dropdown-link-active-color: black;
+            --#{$prefix}dropdown-link-active-bg: #{$warning-alt};
+        }
+    }
+}
