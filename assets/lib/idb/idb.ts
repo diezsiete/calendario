@@ -1,6 +1,7 @@
 import { ChangeEvent } from "react";
 import { IDBPDatabase } from 'idb';
 import idbInit from "@lib/idb/idb-init";
+import storage from "@lib/storage";
 
 const DB_NAME = 'calendario';
 const DB_VERSION = 2;
@@ -8,7 +9,16 @@ export const STORE_TASKS = 'tasks';
 export const STORE_TIMERS = 'timers';
 
 export default function idb(): Promise<IDBPDatabase> {
-    return idbInit(DB_NAME, DB_VERSION);
+    const storageDatabase = getDatabase();
+    return idbInit(storageDatabase.name, storageDatabase.version);
+}
+
+export function getDatabase(): IDBDatabaseInfo {
+    return {name: storage.get('db', DB_NAME), version: storage.get('dbv', DB_VERSION)};
+}
+export function setDatabase(name: string, version: number) {
+    storage.set('db', name);
+    storage.set('dbv', version);
 }
 
 export async function exportIdb() {
@@ -26,7 +36,7 @@ export async function exportIdb() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${new Date().toLocaleDateString('en-CA')}-${DB_NAME}-backup.json`;
+    a.download = `${new Date().toLocaleDateString('en-CA')}-${getDatabase().name}-backup.json`;
     a.click();
 
     URL.revokeObjectURL(url);

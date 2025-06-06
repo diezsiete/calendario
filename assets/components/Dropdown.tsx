@@ -31,9 +31,13 @@ export default function Dropdown(props: DropdownProps) {
         </div>
     )
 }
-
-export function DropdownItemButton({ children, onClick }: { children: ReactNode, onClick?: (e: MouseEvent) => void}) {
+type DropdownItemProps = { children: ReactNode, onClick?: (e: MouseEvent) => void, active?: boolean};
+export function DropdownItemButton({ children, onClick, active }: DropdownItemProps) {
     return <li>
-        <button type='button' className="dropdown-item" onClick={e => onClick?.(e)}>{children}</button>
+        <button type='button' className={classNames('dropdown-item', {active})} onClick={e => onClick?.(e)}>
+            {children}
+        </button>
     </li>
 }
+
+export const DropdownDivider = () => <li><hr className="dropdown-divider"/></li>
