@@ -1,65 +1,9 @@
-import { KeyboardEvent, Ref, useCallback, useEffect, useState } from "react";
+import { KeyboardEvent, useCallback, useEffect, useState } from "react";
 import classNames from "classnames";
-import Form, { FormHandle } from '@components/Form/Form';
 import { TaskData } from "@type/Model";
 
-type TaskFormSimpleProps = {
-    task?: TaskData,
-    onSuccess?: (data: TaskData) => void,
-    ref?: Ref<FormHandle>
-};
 type TaskFieldProps = { value: string, violation: boolean|string,  onChange: (name: string, value: string) => void};
 type TaskDescriptionProps = TaskFieldProps & { onShiftEnter?: () => void };
-
-export default function TaskForm({ task, onSuccess, ref } : TaskFormSimpleProps) {
-    const [violations, setViolations] = useState<Record<string, boolean|string>>({});
-    const [data, setData] = useState<TaskData>(task)
-
-    useEffect(() => {
-        setData(task);
-        setViolations({});
-    }, [task])
-
-    function handleInputChange(name: string, value: string) {
-        validate(name, value);
-        setData(prev => ({
-            ...prev,
-            [name] : value,
-        }));
-    }
-
-    function validate(name: string, value: string): boolean {
-        let violation = false;
-        if (name === 'name' && !value.trim()) {
-            violation = true;
-        }
-        setViolations(prev => ({...prev, [name]: violation}))
-        return violation
-    }
-
-    function submit() {
-        const violation = Object.keys(data).reduce((violation, name) => {
-            const currentViolation = name !== 'id' ? validate(name, data[name]) : false;
-            return violation || currentViolation;
-        }, false)
-        if (!violation) {
-            onSuccess?.(data);
-        }
-    }
-
-    return (
-        <Form preventDefault onSubmit={submit} ref={ref}>
-            <div className="form-floating mb-3">
-                <TaskName value={data.name} violation={violations.name} onChange={handleInputChange} />
-                <label htmlFor="taskName">Nombre</label>
-            </div>
-            <div className="form-floating">
-                <TaskDescription value={data.description} violation={violations.description} onChange={handleInputChange} onShiftEnter={() => submit()} />
-                <label htmlFor="taskDescription">Descripción</label>
-            </div>
-        </Form>
-    )
-}
 
 export function useTaskForm(task: TaskData) {
     const [violations, setViolations] = useState<Record<string, boolean|string>>({});

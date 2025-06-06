@@ -1,7 +1,7 @@
 @import "@styles/abstract";
 
 $statuses: (
-    //todo: $secondary,
+    backlog: $secondary,
     inprogress: $primary-alt,
     paused: $warning-alt,
     done: $success

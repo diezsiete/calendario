@@ -1,37 +1,51 @@
-import {useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import Form, { FormHandle } from "@components/Form/Form";
 import Modal, { ModalBody, ModalFooter, ModalHandle } from "@components/Modal/Modal";
 import { TaskDescription, TaskName, useTaskForm } from "@components/Task/TaskForm";
 import { Task, TaskData } from "@type/Model";
-import { TaskContext, TaskDispatch } from "@lib/state/task";
+import { TaskContext, TaskDispatch, TaskReducerCrudType } from "@lib/state/task";
 import { addTask, deleteTask, updateTask } from "@lib/idb/tasks";
 import ConfirmButton, { ConfirmButtonHandle } from "@components/Form/ConfirmButton";
 import '@styles/components/task/task-modal.scss';
+import TaskStatus from "@components/Task/TaskStatus";
 
 export default function TaskModal() {
     const context = useContext(TaskContext);
     const dispatch = useContext(TaskDispatch);
+    const [modifyTaskPending, setModifyTaskPending] = useState<{type: TaskReducerCrudType, task: Task|TaskData}|null>(null)
     const modalTaskFormRef = useRef<ModalHandle>(null);
     const taskFormRef = useRef<FormHandle>(null);
     const deleteConfirmRef = useRef<ConfirmButtonHandle>(null);
-    const { data, violations, updateField, submit } = useTaskForm(context.task)
+    const { data, violations, updateField, submit } = useTaskForm(context.task);
 
     useEffect(() => {
-        modalTaskFormRef.current?.display(context.show);
-        if (!context.show) {
+        modalTaskFormRef.current?.display(context.modalShow);
+        if (!context.modalShow) {
             deleteConfirmRef.current?.reset();
+            if (modifyTaskPending) {
+                const {type, task} = modifyTaskPending;
+                setModifyTaskPending(null);
+                modifyTask(type, task).then(task => task && dispatch({type, task}))
+            }
         }
-    }, [context.show]);
+    }, [context.modalShow, modifyTaskPending, dispatch]);
 
-    const handleTaskUpsert = (data: TaskData) => {
-        if (data.id) {
-            updateTask(data as Task).then(task => task && dispatch({type: 'taskUpdated', task}))
-        } else {
-            addTask(data).then(task => task && dispatch({type: 'taskInserted', task}))
+    const handleTaskUpsert = (data: TaskData) => queueModifyTaskDispatch(data.id ? 'taskUpdatedFromModal' : 'taskInserted', data);
+    const handleTaskDelete = (data: TaskData) => queueModifyTaskDispatch('taskDeleted', data);
+    const queueModifyTaskDispatch = (type: TaskReducerCrudType, task: Task|TaskData) => {
+        setModifyTaskPending({type, task})
+        modalTaskFormRef.current.hide();
+    }
+    const modifyTask = (type: TaskReducerCrudType, task: Task|TaskData): Promise<Task|undefined> => {
+        if (type === 'taskInserted') {
+            return addTask(task);
+        } else if (type === 'taskUpdatedFromModal') {
+            return updateTask(task as Task)
+        } else if (type === 'taskDeleted') {
+            return new Promise(resolve => deleteTask(task as Task).then(() => resolve(task as Task)))
         }
-    };
-
-    const handleTaskDelete = (task: Task) => deleteTask(task).then(() => dispatch({type: 'taskDeleted', task: task}));
+        return new Promise(resolve => resolve(undefined));
+    }
 
     return <>
         <Modal id='modalTaskForm' size='xl' ref={modalTaskFormRef} className='task'
@@ -43,6 +57,7 @@ export default function TaskModal() {
                 </div>
                 <ModalBody>
                     <TaskDescription value={data.description} violation={violations.description} onChange={updateField} onShiftEnter={() => submit(handleTaskUpsert)} />
+                    <TaskStatus className='mt-3' value={data.status} onChange={status => updateField('status', status)} />
                 </ModalBody>
                 <ModalFooter>
                     {context.task.id &&

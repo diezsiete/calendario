@@ -19,26 +19,19 @@ export default function TaskGrid() {
     }, []);
 
     useEffect(() => {
-        if (context.inserted) {
-            dispatch({type: 'stateCleaned'})
-            const taskInserted = context.task as Task;
-            setTasks(prev => [...prev, taskInserted])
+        if (context.crudType) {
+            setTasks(prev => {
+                if (context.crudType === 'taskInserted') {
+                    return [...prev, context.task as Task]
+                } else if (context.crudType === 'taskUpdated' || context.crudType === 'taskUpdatedFromModal') {
+                    return prev.map(task => task.id === context.task.id ? context.task as Task : task)
+                } else if (context.crudType === 'taskDeleted') {
+                    return prev.filter(task => task.id !== context.task.id)
+                }
+                return prev;
+            })
         }
-    }, [context.inserted, context.task, dispatch]);
-    useEffect(() => {
-        if (context.updated) {
-            dispatch({type: 'stateCleaned'})
-            const taskUpdated = context.task as Task;
-            setTasks(prev => prev.map(task => task.id === taskUpdated.id ? taskUpdated : task))
-        }
-    }, [context.updated, context.task, dispatch]);
-    useEffect(() => {
-        if (context.deleted) {
-            dispatch({type: 'stateCleaned'})
-            const taskDeleted = context.task as Task;
-            setTasks(prev => prev.filter(task => task.id !== taskDeleted.id))
-        }
-    }, [context.deleted, context.task, dispatch]);
+    }, [context.crudType, context.task]);
 
     return <>
         <div className="container-fluid">
