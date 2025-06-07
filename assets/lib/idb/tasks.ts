@@ -1,9 +1,9 @@
-import { getLocalTimer, removeLocalTimer } from "@lib/db/local-timer";
+import { getTaskLocalTimer, removeTaskLocalTimer } from "@lib/db/local-timer";
 import idb, { STORE_TASKS, STORE_TIMERS } from '@lib/idb/idb';
 import { createTimer, deleteTimer, updateTimer } from "@lib/idb/timers";
 import { Task, TaskData, Timer } from "@type/Model";
 
-const taskStartedTimers: Map<string, { task: Task, timer: Timer }> = new Map;
+const taskStartedTimers: Map<number, { task: Task, timer: Timer }> = new Map;
 
 export async function getAllTasks(): Promise<Task[]> {
     return (await idb()).getAll(STORE_TASKS);
@@ -13,7 +13,7 @@ export async function getAllTasksWithCompleteTimers(): Promise<Task[]> {
     const tasks = await getAllTasks();
     for (const task of tasks) {
         if (task.status === 'inprogress') {
-            await fixIncompleteTimers(task.name, await getTaskTimers(task));
+            await fixIncompleteTimers(task.id, await getTaskTimers(task));
         }
     }
     return tasks
@@ -52,17 +52,17 @@ export async function deleteTask(task: Task) {
     const db = await idb();
     await deleteTaskTimers(task.id);
     await db.delete(STORE_TASKS, task.id);
-    removeLocalTimer(task.name);
+    removeTaskLocalTimer(task.id);
 }
 
 export async function startTaskTimer(task: Task, start?: number): Promise<Timer> {
     const timer = await createTimer(start ?? Math.floor(Date.now() / 1000), task.id);
-    taskStartedTimers.set(task.name, { task, timer });
+    taskStartedTimers.set(task.id, { task, timer });
     return timer;
 }
 export async function stopTaskTimer(task: Task, timerId: number, end?: number): Promise<Timer|undefined> {
     const timer = await updateTimer(timerId, end ?? Math.floor(Date.now() / 1000));
-    taskStartedTimers.delete(task.name);
+    taskStartedTimers.delete(task.id);
     return timer;
 }
 
@@ -89,7 +89,7 @@ export async function getTaskTimers(task: Task): Promise<Timer[]> {
 export const getTimersTotal = (timers: Timer[]): number =>
     timers.reduce((total, timer) => total + (timer.end && timer.start ? timer.end - timer.start : 0), 0);
 
-const fixIncompleteTimers = async (name: string, timers: Timer[]): Promise<Timer[]> => {
+const fixIncompleteTimers = async (taskId: number, timers: Timer[]): Promise<Timer[]> => {
     const fixedTimers: Timer[] = [];
     if (timers.filter(timer => !!timer.end).length) {
         for (const key in timers) {
@@ -97,11 +97,11 @@ const fixIncompleteTimers = async (name: string, timers: Timer[]): Promise<Timer
             if (timer.end) {
                 fixedTimers.push(timer);
             } else {
-                const localSeconds = getLocalTimer(name);
+                const localSeconds = getTaskLocalTimer(taskId);
                 const missingSeconds = localSeconds !== null ? localSeconds - getTimersTotal(timers) : -1;
                 if (missingSeconds > 0) {
                     fixedTimers.push(await updateTimer(timer.id, timer.start + missingSeconds));
-                    removeLocalTimer(name);
+                    removeTaskLocalTimer(taskId);
                 } else {
                     await deleteTimer(timer);
                 }
@@ -112,12 +112,12 @@ const fixIncompleteTimers = async (name: string, timers: Timer[]): Promise<Timer
 }
 
 window.addEventListener('beforeunload', async () => {
-    for (const [name, taskTimer] of taskStartedTimers) {
-        const localSeconds = getLocalTimer(name);
+    for (const [taskId, taskTimer] of taskStartedTimers) {
+        const localSeconds = getTaskLocalTimer(taskId);
         const missingSeconds = localSeconds !== null ? localSeconds - getTimersTotal(await getTaskTimers(taskTimer.task)) : -1;
         if (missingSeconds > 0) {
             await updateTimer(taskTimer.timer.id, taskTimer.timer.start + missingSeconds);
-            removeLocalTimer(name);
+            removeTaskLocalTimer(taskId);
         } else {
             await deleteTimer(taskTimer.timer);
         }

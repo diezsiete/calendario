@@ -1,10 +1,10 @@
 import { Ref, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import classNames from "classnames";
-import {getLocalTimer, removeLocalTimer, setLocalTimer} from '@lib/db/local-timer';
+import { getLocalTimer, setLocalTimer } from '@lib/db/local-timer';
 import { formatSeconds } from "@lib/varchar";
 
-export type StopWatchHandle = { run: () => void, stop: () => void };
-type StopWatchProps = {
+export type StopWatchHandle = { run: () => void, stop: () => void, isRunning: () => boolean };
+export type StopWatchProps = {
     seconds?: number,
     onStart?: (start: number) => void,
     onEnd?: (end: number) => void,
@@ -13,7 +13,6 @@ type StopWatchProps = {
     disabled?: boolean,
     ref?: Ref<StopWatchHandle>,
 };
-type StopWatchTaskProps = { name: string } & Omit<StopWatchProps, 'onSecond'>;
 
 export default function StopWatch({ seconds, onStart, onEnd, onSecond, className, disabled, ref }: StopWatchProps) {
     const initialSeconds = useRef(seconds ?? 0);
@@ -27,6 +26,7 @@ export default function StopWatch({ seconds, onStart, onEnd, onSecond, className
     useImperativeHandle(ref, () => ({
         run: () => run(),
         stop: () => stop(),
+        isRunning: () => isRunning
     }))
 
     useEffect(() => {
@@ -76,21 +76,6 @@ export default function StopWatch({ seconds, onStart, onEnd, onSecond, className
             {formatSeconds(elapsedTime)}
         </button>
     )
-}
-
-export function StopWatchTask(props: StopWatchTaskProps) {
-    const { name, onEnd, ...stopWatchProps } = props;
-
-    function secondHandler(elapsedTime: number) {
-        setLocalTimer(name, elapsedTime);
-    }
-
-    function endHandler(end: number) {
-        removeLocalTimer(name);
-        onEnd?.(end);
-    }
-
-    return <StopWatch onSecond={secondHandler} onEnd={endHandler} {...stopWatchProps} />
 }
 
 export function StopWatchLocalStorage({ name, className } : { name: string, className?: string }) {

@@ -1,9 +1,10 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import classNames from "classnames";
-import { StopWatchHandle, StopWatchTask } from "@components/StopWatch";
+import { StopWatchHandle } from "@components/StopWatch";
 import { Task, TaskData, TaskStatus as TypeTaskStatus, Timer } from "@type/Model";
 import { getTaskTimers, getTimersTotal, startTaskTimer, stopTaskTimer, updateTask as updateIdbTask } from '@lib/idb/tasks';
 import TaskStatus from "@components/Task/TaskStatus";
+import TaskStopWatch from "@components/Task/TaskStopWatch";
 import { TaskContext, TaskDispatch } from "@lib/state/task";
 import '@styles/components/task/task-card.scss'
 
@@ -11,7 +12,6 @@ type TaskCardProps = { task: Task, className?: string, onEdit?: (task: Task) => 
 
 export default function TaskCard({ task, className, onEdit }: TaskCardProps) {
     const [stopWatchSeconds, setStopWatchSeconds] = useState(0);
-    const [stopWatchRunning, setStopWatchRunning] = useState(false);
     const [endStatus, setEndStatus] = useState<TypeTaskStatus>('paused')
     const taskCurrentTimer = useRef<Timer>(null);
     const context = useContext(TaskContext);
@@ -22,19 +22,19 @@ export default function TaskCard({ task, className, onEdit }: TaskCardProps) {
         getTaskTimers(task).then(timers => setStopWatchSeconds(getTimersTotal(timers)))
     }, [task]);
     useEffect(() => {
-        if ((context.crudType === 'taskInserted' || context.crudType === 'taskUpdatedFromModal') && context.task.id === task.id && task.status === 'inprogress') {
+        if (context.task.id === task.id && task.status === 'inprogress' && (context.crudType === 'taskInserted' || (
+            context.crudType === 'taskUpdatedFromModal' && !stopWatchRef.current.isRunning() // evitar update inprogress crea nuevo timer
+        ))) {
             stopWatchRef.current?.run();
         }
-    }, [context.crudType, context.task, task, dispatch]);
+    }, [context.crudType, context.task, task]);
 
     async function startTimerHandler(start: number) {
-        setStopWatchRunning(true);
         taskCurrentTimer.current = await startTaskTimer(task, start);
         updateTask(task, {status: 'inprogress'});
     }
 
     async function endTimerHandler(end: number) {
-        setStopWatchRunning(false);
         if (taskCurrentTimer.current) {
             taskCurrentTimer.current = await stopTaskTimer(task, taskCurrentTimer.current.id, end);
             if (taskCurrentTimer.current) {
@@ -46,9 +46,9 @@ export default function TaskCard({ task, className, onEdit }: TaskCardProps) {
     }
 
     async function handleStatusChange(status: TypeTaskStatus) {
-        if (status === 'inprogress' && !stopWatchRunning) {
+        if (status === 'inprogress' && !stopWatchRef.current.isRunning()) {
             stopWatchRef.current?.run();
-        } else if (status !== 'inprogress' && stopWatchRunning) {
+        } else if (status !== 'inprogress' && stopWatchRef.current.isRunning()) {
             setEndStatus(status);
             stopWatchRef.current?.stop();
         } else {
@@ -68,7 +68,7 @@ export default function TaskCard({ task, className, onEdit }: TaskCardProps) {
             </div>
             <div className="card-footer d-flex justify-content-between">
                 <TaskStatus value={task.status} onChange={handleStatusChange} />
-                <StopWatchTask name={task.name} onStart={startTimerHandler} onEnd={endTimerHandler} ref={stopWatchRef}
+                <TaskStopWatch taskId={task.id} onStart={startTimerHandler} onEnd={endTimerHandler} ref={stopWatchRef}
                                seconds={stopWatchSeconds} disabled={task.status === 'done'} />
             </div>
         </div>

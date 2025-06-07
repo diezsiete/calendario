@@ -1,14 +1,13 @@
 import { Timer, TimerData } from "@type/Model";
 import idb, { STORE_TIMERS } from '@lib/idb/idb';
+import { add } from '@lib/idb/operation-manager';
 
 export async function createTimer(start: number, taskId?: number): Promise<Timer> {
-    const db = await idb();
-    const timer: TimerData = { start };
+    const data: TimerData = { start };
     if (taskId) {
-        timer.taskId = taskId;
+        data.taskId = taskId;
     }
-    const id = await db.add(STORE_TIMERS, timer);
-    timer.id = id as number;
+    const timer = await add(STORE_TIMERS, data);
     return timer as Timer;
 }
 export async function updateTimer(id: number, end: number): Promise<Timer|null> {
