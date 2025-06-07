@@ -1,5 +1,9 @@
 @import "base";
 
+.break-words-smart {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
 .timer-button {
     font-variant-numeric: tabular-nums;
     //font-family: monospace;

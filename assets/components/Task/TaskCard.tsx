@@ -64,7 +64,7 @@ export default function TaskCard({ task, className, onEdit }: TaskCardProps) {
         <div className={classNames('task card', className)}>
             <div className="card-body" onClick={() => onEdit?.(task)}>
                 <h5 className="card-title">{task.name}</h5>
-                {task.description && <p className="card-text">{task.description}</p>}
+                {task.description && <p className="card-text break-words-smart">{task.description}</p>}
             </div>
             <div className="card-footer d-flex justify-content-between">
                 <TaskStatus value={task.status} onChange={handleStatusChange} />
