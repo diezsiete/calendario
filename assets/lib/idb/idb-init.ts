@@ -31,7 +31,7 @@ export default function idbInit(name: string, version: number): Promise<IDBPData
 }
 
 export const openIDB = async (name: string, version: number) => openDB(name, version, {
-    upgrade(db) {
+    upgrade(db, oldVersion, newVersion, transaction) {
         if (!db.objectStoreNames.contains(STORE_TASKS)) {
             db.createObjectStore(STORE_TASKS, { keyPath: 'id', autoIncrement: true });
         }
@@ -40,6 +40,11 @@ export const openIDB = async (name: string, version: number) => openDB(name, ver
                 keyPath: 'id',
                 autoIncrement: true
             }).createIndex("taskId", "taskId", { unique: false });
+        }
+        // v3 status index
+        const tasksStore = transaction.objectStore(STORE_TASKS);
+        if (!tasksStore.indexNames.contains('status')) {
+            tasksStore.createIndex('status', 'status', { unique: false });
         }
     },
 });

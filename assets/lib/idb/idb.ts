@@ -4,7 +4,7 @@ import idbInit from "@lib/idb/idb-init";
 import storage from "@lib/storage";
 
 const DB_NAME = 'calendario';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 export const STORE_TASKS = 'tasks';
 export const STORE_TIMERS = 'timers';
 
@@ -14,7 +14,14 @@ export default function idb(): Promise<IDBPDatabase> {
 }
 
 export function getDatabase(): IDBDatabaseInfo {
-    return {name: storage.get('db', DB_NAME), version: storage.get('dbv', DB_VERSION)};
+    const db = storage.get('db', DB_NAME);
+    let dbv = storage.get('dbv', DB_VERSION);
+    // si modificamos DB_VERSION actualizamos storage tambien
+    if (dbv < DB_VERSION) {
+        dbv = DB_VERSION;
+        setDatabase(db, dbv);
+    }
+    return {name: db, version: dbv};
 }
 export function setDatabase(name: string, version: number) {
     storage.set('db', name);
