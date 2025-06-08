@@ -1,5 +1,4 @@
 import { useContext, useEffect, useState } from "react";
-import ModalConfirm, { useModalConfirm } from "@components/Modal/ModalConfirm";
 import TaskCard from "@components/Task/TaskCard";
 import { TaskContext, TaskDispatch } from "@lib/state/task";
 import { getAllTasks, getAllTasksWithCompleteTimers } from '@lib/idb/tasks';
@@ -13,7 +12,6 @@ export default function TaskGrid() {
     const dbContext = useContext(DbContext);
     const context = useContext(TaskContext);
     const dispatch = useContext(TaskDispatch);
-    const modalDelete = useModalConfirm();
     const columns = useMasonry(tasks);
 
     useEffect(() => {
@@ -40,25 +38,18 @@ export default function TaskGrid() {
         }
     }, [context.crudType, context.task]);
 
-    return <>
-        <div className="container-fluid">
-            <div className="row g-3 mt-0">
+    return <div className="container-fluid">
+        <div className="row g-3 mt-0">
 
-                {columns.map((tasks, index) => <div className="col" key={index}>{tasks.map(task =>
-                    <TaskCard key={task.id} className='mb-3' task={task} onEdit={task => dispatch({type: 'editTaskOpened', task})} />
-                )}</div>)}
+            {columns.map((tasks, index) => <div className="col" key={index}>{tasks.map(task =>
+                <TaskCard key={task.id} className='mb-3' task={task} onEdit={task => dispatch({type: 'editTaskOpened', task})} />
+            )}</div>)}
 
-                {/*{tasks.map(task => <div className="col-md-6 col-lg-4 col-xl-3" key={task.id}>
-                    <TaskCard task={task} onEdit={handleTaskEdit} />
-                </div>)}*/}
-            </div>
+            {/*{tasks.map(task => <div className="col-md-6 col-lg-4 col-xl-3" key={task.id}>
+                <TaskCard task={task} onEdit={handleTaskEdit} />
+            </div>)}*/}
         </div>
-
-        <ModalConfirm id='modalDelete' onConfirm={modalDelete.handleConfirm} ref={modalDelete.ref}
-                      confirmLabel='Eliminar'>
-            {modalDelete.message}
-        </ModalConfirm>
-    </>
+    </div>
 }
 
 function useMasonry(tasks: Task[]) {

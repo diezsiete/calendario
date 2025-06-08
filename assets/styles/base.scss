@@ -13,3 +13,12 @@
 .btn-outline-warning-alt {
     @include button-outline-variant($warning-alt);
 }
+
+.break-words-smart {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+.timer-button {
+    font-variant-numeric: tabular-nums;
+    //font-family: monospace;
+}
