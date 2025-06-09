@@ -22,12 +22,12 @@ export default function TaskCard({ task, className, onEdit }: TaskCardProps) {
         getTaskTimers(task).then(timers => setStopWatchSeconds(getTimersTotal(timers)))
     }, [task]);
     useEffect(() => {
-        if (context.task.id === task.id && task.status === 'inprogress' && (context.crudType === 'taskInserted' || (
-            context.crudType === 'taskUpdatedFromModal' && !stopWatchRef.current.isRunning() // evitar update inprogress crea nuevo timer
+        if (context.task.id === task.id && context.task.status === 'inprogress' && (context.crudType === 'taskInserted' || (
+            context.crudType === 'taskUpdated' && !stopWatchRef.current.isRunning() // evitar update inprogress crea nuevo timer
         ))) {
             stopWatchRef.current?.run();
         }
-    }, [context.crudType, context.task, task]);
+    }, [context.crudType, context.task.id, task.id, context.task.status]);
 
     async function startTimerHandler(start: number) {
         taskCurrentTimer.current = await startTaskTimer(task, start);

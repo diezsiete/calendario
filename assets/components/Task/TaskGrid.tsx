@@ -28,7 +28,7 @@ export default function TaskGrid() {
             setTasks(prev => {
                 if (context.crudType === 'taskInserted') {
                     return [...prev, context.task as Task]
-                } else if (context.crudType === 'taskUpdated' || context.crudType === 'taskUpdatedFromModal') {
+                } else if (context.crudType === 'taskUpdated') {
                     return prev.map(task => task.id === context.task.id ? context.task as Task : task)
                 } else if (context.crudType === 'taskDeleted') {
                     return prev.filter(task => task.id !== context.task.id)

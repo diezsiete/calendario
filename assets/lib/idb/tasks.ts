@@ -1,6 +1,6 @@
 import { getTaskLocalTimer, removeTaskLocalTimer } from "@lib/db/local-timer";
 import idb, { STORE_TASKS, STORE_TIMERS } from '@lib/idb/idb';
-import { createTimer, deleteTimer, updateTimer } from "@lib/idb/timers";
+import { createTimer, deleteTimer, deleteTimersByTask, findLastTimerWithoutEnd, updateTimer } from "@lib/idb/timers";
 import { Task, TaskData, Timer } from "@type/Model";
 
 const taskStartedTimers: Map<number, { task: Task, timer: Timer }> = new Map;
@@ -8,9 +8,16 @@ const taskStartedTimers: Map<number, { task: Task, timer: Timer }> = new Map;
 export async function getAllTasks(): Promise<Task[]> {
     return (await idb()).getAll(STORE_TASKS);
 }
+export async function getAllTasksByStatus(status: string): Promise<Task[]> {
+    const tx = (await idb()).transaction(STORE_TASKS);
+    const index = tx.store.index('status');
+    const tasks = await index.getAll(status);
+    await tx.done;
+    return tasks;
+}
 
-export async function getAllTasksWithCompleteTimers(): Promise<Task[]> {
-    const tasks = await getAllTasks();
+export async function getAllTasksWithCompleteTimers(status?: string): Promise<Task[]> {
+    const tasks = await (!status ? getAllTasks() : getAllTasksByStatus(status));
     for (const task of tasks) {
         if (task.status === 'inprogress') {
             await fixIncompleteTimers(task.id, await getTaskTimers(task));
@@ -50,13 +57,16 @@ export async function addTask(data: TaskData): Promise<Task|undefined> {
 
 export async function deleteTask(task: Task) {
     const db = await idb();
-    await deleteTaskTimers(task.id);
+    await deleteTimersByTask(task.id);
     await db.delete(STORE_TASKS, task.id);
     removeTaskLocalTimer(task.id);
 }
 
 export async function startTaskTimer(task: Task, start?: number): Promise<Timer> {
-    const timer = await createTimer(start ?? Math.floor(Date.now() / 1000), task.id);
+    let timer = await findLastTimerWithoutEnd(task.id);
+    if (!timer) {
+        timer = await createTimer(start ?? Math.floor(Date.now() / 1000), task.id);
+    }
     taskStartedTimers.set(task.id, { task, timer });
     return timer;
 }
@@ -64,21 +74,6 @@ export async function stopTaskTimer(task: Task, timerId: number, end?: number): 
     const timer = await updateTimer(timerId, end ?? Math.floor(Date.now() / 1000));
     taskStartedTimers.delete(task.id);
     return timer;
-}
-
-
-async function deleteTaskTimers(taskId: number) {
-    const db = await idb();
-    const tx = db.transaction(STORE_TIMERS, 'readwrite');
-    const index = tx.store.index('taskId');
-
-    let cursor = await index.openCursor(IDBKeyRange.only(taskId));
-    while (cursor) {
-        await cursor.delete();
-        cursor = await cursor.continue();
-    }
-
-    await tx.done;
 }
 
 export async function getTaskTimers(task: Task): Promise<Timer[]> {

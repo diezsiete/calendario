@@ -22,6 +22,7 @@ Encore
      * and one CSS file (e.g. app.css) if your JavaScript imports CSS.
      */
     .addEntry('app', './assets/app.tsx')
+    .addEntry('kanban', './assets/kanban.tsx')
     .addAliases({
         '@components': path.resolve(__dirname, 'assets/components'),
         '@lib': path.resolve(__dirname, 'assets/lib'),

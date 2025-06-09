@@ -30,7 +30,7 @@ export default function TaskModal() {
         }
     }, [context.modalShow, modifyTaskPending, dispatch]);
 
-    const handleTaskUpsert = (data: TaskData) => queueModifyTaskDispatch(data.id ? 'taskUpdatedFromModal' : 'taskInserted', data);
+    const handleTaskUpsert = (data: TaskData) => queueModifyTaskDispatch(data.id ? 'taskUpdated' : 'taskInserted', data);
     const handleTaskDelete = (data: TaskData) => queueModifyTaskDispatch('taskDeleted', data);
     const queueModifyTaskDispatch = (type: TaskReducerCrudType, task: Task|TaskData) => {
         setModifyTaskPending({type, task})
@@ -39,7 +39,7 @@ export default function TaskModal() {
     const modifyTask = (type: TaskReducerCrudType, task: Task|TaskData): Promise<Task|undefined> => {
         if (type === 'taskInserted') {
             return addTask(task);
-        } else if (type === 'taskUpdatedFromModal') {
+        } else if (type === 'taskUpdated') {
             return updateTask(task as Task)
         } else if (type === 'taskDeleted') {
             return new Promise(resolve => deleteTask(task as Task).then(() => resolve(task as Task)))

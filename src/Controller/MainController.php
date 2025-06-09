@@ -13,4 +13,9 @@ class MainController extends AbstractController
     {
         return $this->render('main/index.html.twig');
     }
+    #[Route('/kanban')]
+    public function kanban(): Response
+    {
+        return $this->render('main/kanban.html.twig');
+    }
 }

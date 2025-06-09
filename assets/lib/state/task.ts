@@ -1,7 +1,7 @@
-import { Task, TaskData } from "@type/Model";
+import { Task, TaskData, TaskStatus as TypeTaskStatus } from "@type/Model";
 import { ActionDispatch, createContext } from "react";
 
-export type TaskReducerCrudType = 'taskInserted'|'taskUpdated'|'taskUpdatedFromModal'|'taskDeleted';
+export type TaskReducerCrudType = 'taskInserted'|'taskUpdated'|'taskDeleted';
 export type TaskReducerActionType = 'newTaskOpened'|'editTaskOpened'|'modalClosed'|TaskReducerCrudType
 export type TaskState = { task: TaskData|Task, modalShow: boolean, crudType: TaskReducerCrudType|null };
 export type TaskReducerAction = {type: TaskReducerActionType, task?: Task};
@@ -25,7 +25,6 @@ export function taskReducer(state: TaskState, action: TaskReducerAction): TaskSt
         }
         case 'taskInserted':
         case 'taskUpdated':
-        case 'taskUpdatedFromModal':
         case 'taskDeleted': {
             return { task: action.task,  modalShow: false, crudType: action.type };
         }
@@ -34,3 +33,7 @@ export function taskReducer(state: TaskState, action: TaskReducerAction): TaskSt
         }
     }
 }
+
+export const taskStatuses: Record<TypeTaskStatus, string> = {
+    'backlog': 'Backlog', 'todo' : 'To Do', 'inprogress': 'In Progress', 'paused': 'Paused', 'done': 'Done'
+};

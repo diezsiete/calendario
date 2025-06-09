@@ -1,0 +1,52 @@
+@import 'base';
+
+html, body {
+    height: 100%;
+}
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+.layout-fill-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Ensures the container takes up the full viewport height */
+}
+header {
+    background-color: #f8b400;
+    padding: 20px;
+    text-align: center;
+}
+
+main {
+    flex-grow: 1; /* Expands to fill the available space between header and footer */
+    padding: 1rem 0;
+    display: flex;
+}
+
+.kanban-column {
+    padding: 0 .5rem;
+    min-width: 20%;
+    &:first-child {
+        padding-left: 1rem;
+    }
+    &:last-child {
+        padding-right: 1rem;
+    }
+
+    &-content {
+        background-color: $dark-alt;
+        display: flex;
+        flex-direction: column;
+        border-radius: $card-border-radius;
+        &-header {
+            padding: $card-cap-padding-y $card-cap-padding-x;
+            color: $card-cap-color;
+        }
+        &-body {
+            flex: 1 1 auto;
+            padding: 0 $card-spacer-x;
+        }
+    }
+}
