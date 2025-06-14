@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { TaskContext, TaskDispatch, taskStatuses } from "@lib/state/task";
+import { TaskContext, taskStatuses } from "@lib/state/task";
 import { Task, TaskStatus as TypeTaskStatus } from "@type/Model";
 import TaskCard from "@components/Task/TaskCard";
 import { getAllTasksByStatus, getAllTasksWithCompleteTimers } from "@lib/idb/tasks";
@@ -14,7 +14,6 @@ export default function Kanban() {
     }, {} as TaskByStatus));
     const dbContext = useContext(DbContext);
     const context = useContext(TaskContext);
-    const dispatch = useContext(TaskDispatch);
 
     useEffect(() => {
         if (dbContext) {
@@ -61,9 +60,7 @@ export default function Kanban() {
                     {taskStatuses[status]}
                 </div>
                 <div className="kanban-column-content-body">
-                    {taskByStatus[status].map((task: Task) =>
-                        <TaskCard key={task.id} className='mb-3' task={task} onEdit={task => dispatch({type: 'editTaskOpened', task})} />
-                    )}
+                    {taskByStatus[status].map((task: Task) => <TaskCard key={task.id} className='mb-3' task={task} />)}
                 </div>
             </div>
         </div>)}

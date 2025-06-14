@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import TaskCard from "@components/Task/TaskCard";
-import { TaskContext, TaskDispatch } from "@lib/state/task";
+import { TaskContext } from "@lib/state/task";
 import { getAllTasks, getAllTasksWithCompleteTimers } from '@lib/idb/tasks';
 import { match } from "@lib/util";
 import { Task } from "@type/Model";
@@ -11,7 +11,6 @@ export default function TaskGrid() {
     const [tasks, setTasks] = useState<Task[]>([]);
     const dbContext = useContext(DbContext);
     const context = useContext(TaskContext);
-    const dispatch = useContext(TaskDispatch);
     const columns = useMasonry(tasks);
 
     useEffect(() => {
@@ -42,7 +41,7 @@ export default function TaskGrid() {
         <div className="row g-3 mt-0">
 
             {columns.map((tasks, index) => <div className="col" key={index}>{tasks.map(task =>
-                <TaskCard key={task.id} className='mb-3' task={task} onEdit={task => dispatch({type: 'editTaskOpened', task})} />
+                <TaskCard key={task.id} className='mb-3' task={task} />
             )}</div>)}
 
             {/*{tasks.map(task => <div className="col-md-6 col-lg-4 col-xl-3" key={task.id}>

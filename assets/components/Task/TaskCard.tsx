@@ -8,9 +8,9 @@ import TaskStopWatch from "@components/Task/TaskStopWatch";
 import { TaskContext, TaskDispatch } from "@lib/state/task";
 import '@styles/components/task/task-card.scss'
 
-type TaskCardProps = { task: Task, className?: string, onEdit?: (task: Task) => void };
+type TaskCardProps = { task: Task, className?: string };
 
-export default function TaskCard({ task, className, onEdit }: TaskCardProps) {
+export default function TaskCard({ task, className }: TaskCardProps) {
     const [stopWatchSeconds, setStopWatchSeconds] = useState(0);
     const [endStatus, setEndStatus] = useState<TypeTaskStatus>('paused')
     const taskCurrentTimer = useRef<Timer>(null);
@@ -62,7 +62,7 @@ export default function TaskCard({ task, className, onEdit }: TaskCardProps) {
 
     return (
         <div className={classNames('task card', className)}>
-            <div className="card-body" onClick={() => onEdit?.(task)}>
+            <div className="card-body" onClick={() => dispatch({type: 'editTaskOpened', task})}>
                 <h5 className="card-title">{task.name}</h5>
                 {task.description && <p className="card-text break-words-smart">{task.description}</p>}
             </div>
