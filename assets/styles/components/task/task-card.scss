@@ -1,6 +1,8 @@
 @import '@styles/abstract';
 
 .task.card {
+    margin-bottom: 1rem;
+
     @at-root .kanban-column & {
         border-color: $dark-alt;
     }
@@ -13,4 +15,27 @@
     .card-footer {
         border: none;
     }
+
+    &.is-overlay-dragging {
+        opacity: 0.75;
+    }
+    &.is-sortable-dragging {
+        background-color: $dark-soft;
+        --bs-card-title-color: #{$dark-soft};
+        --bs-card-color: #{$dark-soft};
+        --bs-card-cap-bg: #{$dark-soft};
+        .btn.timer-button {
+            color: $dark-soft;
+        }
+        .form-select {
+            background-image: none;
+            border: none !important;
+            color: transparent !important;
+            background-color: transparent !important;
+        }
+    }
+}
+
+.draggable-task-card {
+    transform: translate3d(var(--translate-x, 0), var(--translate-y, 0), 0) scale(var(--scale, 1));
 }

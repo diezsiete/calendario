@@ -1,19 +1,21 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import CalendarioNavbar from "@components/CalendarioNavbar";
-import TaskContextProvider from "@components/Task/TaskContextProvider";
+import KanbanNavbar from "@components/Kanban/KanbanNavbar";
+import KanbanContextProvider from "@components/Kanban/KanbanContextProvider";
 import Kanban from "@components/Kanban/Kanban";
 import DbContextProvider from "@components/Db/DbContextProvider";
+import TaskModal from "@components/Kanban/TaskModal";
 import '@styles/kanban.scss';
 
 const root = createRoot(document.getElementById("root"));
 root.render(
     <StrictMode>
         <DbContextProvider>
-            <TaskContextProvider>
-                <CalendarioNavbar />
+            <KanbanContextProvider>
+                <KanbanNavbar />
                 <Kanban />
-            </TaskContextProvider>
+                <TaskModal />
+            </KanbanContextProvider>
         </DbContextProvider>
     </StrictMode>
 );

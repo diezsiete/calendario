@@ -1,0 +1,140 @@
+import rem, { Rem } from "@lib/idb/rem";
+import { AbstractQuery, AbstractRepo, OrderBySort } from "@lib/idb/repo/abstracts";
+import { STORE_TASKS } from "@lib/idb/idb";
+import { Task, TaskData } from "@type/Model";
+import { arrayMove } from "@dnd-kit/sortable";
+
+export default class TasksRepo extends AbstractRepo {
+    private _query: TasksQuery|null = null;
+
+    private tasksByColumn: Record<string, Task[]> = {};
+    private tasks: Map<number, Task> = new Map;
+
+    constructor(rem: Rem) {
+        super(rem, STORE_TASKS)
+    }
+
+    get query() {
+        return this._query ? this._query : this._query = new TasksQuery(this.rem, this.store);
+    }
+
+    newTask(): TaskData {
+        return {name: '', description: '', status: 'todo', columnId: 'todo', position: 0};
+    }
+
+    getTask(taskId: number): Task|undefined {
+        return this.tasks.get(taskId);
+    }
+
+    getTasksByColumn(columnId: string) {
+        return this.tasksByColumn[columnId] ?? []
+    }
+
+    setTaskColumnId(taskId: number, columnId: string) {
+        const task = this.getTask(taskId);
+        this.removeTaskFromColumn(task.id, task.columnId);
+        task.columnId = columnId;
+        this.tasksByColumn[columnId] = [task, ...this.tasksByColumn[columnId]];
+    }
+
+    swapTaskPosition(taskId: number, swapId: number): boolean {
+        const columnId = this.getTask(taskId)?.columnId
+        if (columnId) {
+            const index = this.getTaskPositionInColumn(taskId, columnId);
+            const swapIndex = this.getTaskPositionInColumn(swapId, columnId);
+            if (index >= 0 && swapIndex >= 0 && index !== swapIndex) {
+                this.tasksByColumn[columnId] = arrayMove(this.tasksByColumn[columnId], index, swapIndex);
+                this.tasksByColumn[columnId].forEach((task, index) => task.position = index);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    async fetchAllByColumnId(columnId: string): Promise<Task[]> {
+        this.tasksByColumn[columnId] = await this.query.whereColumnIdOrderByPosition(columnId);
+        this.tasksByColumn[columnId].forEach(task => this.tasks.set(task.id, task))
+        return this.tasksByColumn[columnId]
+    }
+
+    updateTasksWithColumnId(columnId: string): Promise<void> {
+        return this.writeTransaction(async ({ store }) => {
+            for (const task of this.tasksByColumn[columnId]) {
+                await store.put(task);
+            }
+        })
+    }
+
+    addTask(data: TaskData): Promise<Task> {
+        return this.writeTransaction<Task>(async ({ store }) => {
+            const index = store.index('columnId');
+
+            data.columnId = data.status;
+            data.position = await index.count(data.columnId);
+            data.timersTotal = 0;
+
+            const id = await store.add(data) as number;
+            const task = {id, ...data} as Task;
+
+            this.tasks.set(id, task);
+            this.tasksByColumn[data.columnId].push(task);
+
+            return task;
+        })
+    }
+
+    updateTask(taskId: number, data: Partial<TaskData>): Promise<Task|undefined> {
+        const task = this.getTask(taskId);
+        if (!task) {
+            return new Promise(resolve => resolve(undefined))
+        }
+        return this.writeTransaction<Task>(async ({ store }) => {
+            const taskUpdated = {...task, ...data} as Task;
+            await store.put(taskUpdated);
+
+            this.tasks.set(taskUpdated.id, taskUpdated);
+            this.tasksByColumn[taskUpdated.columnId] = this.tasksByColumn[taskUpdated.columnId].map(
+                task => task.id === taskUpdated.id ? taskUpdated : task
+            );
+
+            return taskUpdated;
+        });
+    }
+    async updateTaskTimersTotal(taskId: number): Promise<number> {
+        const timersTotal = await rem.timers.fetchTimersTotalByTask(taskId);
+        await this.updateTask(taskId, { timersTotal })
+        return timersTotal;
+    }
+
+    async deleteTask(taskId: number): Promise<Task|undefined> {
+        const task = this.getTask(taskId);
+        if (task) {
+            this.tasks.delete(taskId);
+            this.removeTaskFromColumn(taskId, task.columnId);
+            await this.rem.timers.deleteTimersByTask(taskId);
+            await this.db.delete(this.store, taskId);
+            this.rem.tasksTimers.local.remove(taskId)
+            return task;
+        }
+    }
+
+    private getTaskPositionInColumn(taskId: number, columnId: string): number {
+        return this.tasksByColumn[columnId].findIndex(task => task.id === taskId);
+    }
+
+    private removeTaskFromColumn(taskId: number, columnId: string) {
+        this.tasksByColumn[columnId] = this.tasksByColumn[columnId].filter(task => task.id !== taskId);
+    }
+}
+
+class TasksQuery extends AbstractQuery {
+    whereColumnIdOrderByPosition(columnId: string, sort: OrderBySort = 'ASC') {
+        return AbstractQuery.singletonAsync<Task[]>(this, `whereColumnIdOrderByPosition${sort}`, async () => {
+            const orderBound0 = sort === 'ASC' ? -Infinity : Infinity;
+            const orderBound1 = sort === 'ASC' ? Infinity : -Infinity;
+            return this.db.getAllFromIndex(
+                this.store, 'columnId_position', IDBKeyRange.bound([columnId, orderBound0], [columnId, orderBound1])
+            );
+        })
+    }
+}

@@ -39,20 +39,38 @@ export async function upsertTask(task: TaskData): Promise<void>  {
     await store.put(task); // `put` will update if `note.id` exists
     await tx.done;
 }
-export async function updateTask(task: Task, data?: Partial<TaskData>): Promise<Task|undefined>  {
+export async function updateTask(task: Task|number, data?: Partial<TaskData>): Promise<Task|undefined>  {
     const db = await idb();
     const tx = db.transaction(STORE_TASKS, 'readwrite');
     const store = tx.objectStore(STORE_TASKS);
-    const id = await store.put(data ? {...task, ...data} : task);
+    let id: number;
+    if (typeof task === 'number') {
+        id = task;
+        task = await store.get(id);
+        if (!task) return undefined;
+        await store.put({...task as Task, ...data})
+    } else {
+        id = (await store.put(data ? {...task, ...data} : task)) as number;
+    }
     task = await store.get(id);
     await tx.done;
-    return task;
+    return task as Task;
 }
 
 export async function addTask(data: TaskData): Promise<Task|undefined> {
     const db = await idb();
-    const id = await db.add(STORE_TASKS, data);
-    return db.get(STORE_TASKS, id);
+    const tx = db.transaction(STORE_TASKS, 'readwrite');
+    const store = tx.objectStore(STORE_TASKS);
+    const index = tx.store.index('columnId');
+
+    data.columnId = data.status;
+    data.position = await index.count(data.columnId);
+
+    const id = await store.add(data);
+    const task = await store.get(id);
+    await tx.done;
+
+    return task
 }
 
 export async function deleteTask(task: Task) {
@@ -118,3 +136,4 @@ window.addEventListener('beforeunload', async () => {
         }
     }
 });
+

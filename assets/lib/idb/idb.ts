@@ -3,10 +3,11 @@ import { IDBPDatabase } from 'idb';
 import idbInit from "@lib/idb/idb-init";
 import storage from "@lib/storage";
 
-const DB_NAME = 'calendario';
-const DB_VERSION = 3;
+export const DB_NAME = 'calendario';
+export const DB_VERSION = 6;
 export const STORE_TASKS = 'tasks';
 export const STORE_TIMERS = 'timers';
+export const STORE_KANBAN_COLUMNS = 'kanbanColumns';
 
 export default function idb(): Promise<IDBPDatabase> {
     const storageDatabase = getDatabase();

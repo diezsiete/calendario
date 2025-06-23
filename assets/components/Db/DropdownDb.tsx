@@ -1,7 +1,8 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import Dropdown, { DropdownDivider, DropdownItemButton } from "@components/Dropdown";
-import { getDatabase, exportIdb, handleUploadRestoreFile, setDatabase } from "@lib/idb/idb";
+import { getDatabase, exportIdb, handleUploadRestoreFile } from "@lib/idb/idb";
 import { DbContext, DbDispatch } from "@components/Db/DbContextProvider";
+import rem from "@lib/idb/rem";
 
 export default function DropdownDb() {
     const dbContext = useContext(DbContext);
@@ -22,8 +23,7 @@ export default function DropdownDb() {
     function handleDbSelect(dbName: string) {
         dbs.forEach(db => {
             if (db.name === dbName) {
-                setDatabase(db.name, db.version);
-                dbDispatch(db.name)
+                rem.setDatabase(db.name, db.version).then(rem => dbDispatch(rem.dbName))
             }
         })
     }

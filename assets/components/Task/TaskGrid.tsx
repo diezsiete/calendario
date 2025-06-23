@@ -41,7 +41,7 @@ export default function TaskGrid() {
         <div className="row g-3 mt-0">
 
             {columns.map((tasks, index) => <div className="col" key={index}>{tasks.map(task =>
-                <TaskCard key={task.id} className='mb-3' task={task} />
+                <TaskCard key={task.id} task={task} />
             )}</div>)}
 
             {/*{tasks.map(task => <div className="col-md-6 col-lg-4 col-xl-3" key={task.id}>

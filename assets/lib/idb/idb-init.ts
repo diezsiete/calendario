@@ -1,5 +1,7 @@
-import { IDBPDatabase, openDB } from "idb";
-import { STORE_TASKS, STORE_TIMERS } from "@lib/idb/idb";
+import { IDBPDatabase, IDBPObjectStore, openDB } from "idb";
+import { STORE_KANBAN_COLUMNS, STORE_TASKS, STORE_TIMERS } from "@lib/idb/idb";
+import { taskStatuses } from "@lib/state/task";
+import { KanbanColumn, Task } from "@type/Model";
 
 const dbs: Record<string, IDBPDatabase> = {};
 const resolving: Record<string, {resolve: (db: IDBPDatabase) => void, reject: (ev: Event) => void}> = {};
@@ -31,7 +33,7 @@ export default function idbInit(name: string, version: number): Promise<IDBPData
 }
 
 export const openIDB = async (name: string, version: number) => openDB(name, version, {
-    upgrade(db, oldVersion, newVersion, transaction) {
+    async upgrade(db, oldVersion, newVersion, transaction) {
         if (!db.objectStoreNames.contains(STORE_TASKS)) {
             db.createObjectStore(STORE_TASKS, { keyPath: 'id', autoIncrement: true });
         }
@@ -41,11 +43,32 @@ export const openIDB = async (name: string, version: number) => openDB(name, ver
                 autoIncrement: true
             }).createIndex("taskId", "taskId", { unique: false });
         }
-        // v3 status index
         const tasksStore = transaction.objectStore(STORE_TASKS);
         if (!tasksStore.indexNames.contains('status')) {
             tasksStore.createIndex('status', 'status', { unique: false });
         }
+        if (!db.objectStoreNames.contains(STORE_KANBAN_COLUMNS)) {
+            const columnsStore = db.createObjectStore(STORE_KANBAN_COLUMNS, { keyPath: 'id' });
+            columnsStore.createIndex('position', 'position');
+
+            tasksStore.createIndex('columnId', 'columnId');
+            tasksStore.createIndex('position', 'position');
+            // Compound index for efficient queries by column and position
+            tasksStore.createIndex('columnId_position', ['columnId', 'position']);
+        }
+
+        const columnStore = transaction.objectStore(STORE_KANBAN_COLUMNS);
+        const countRequest = await columnStore.count();
+        if (countRequest === 0) {
+            const defaultColumns: KanbanColumn[] = [];
+            Object.keys(taskStatuses).forEach((status, index) => {
+                defaultColumns.push({id: status, title: taskStatuses[status], position: index})
+            })
+            for (const column of defaultColumns) {
+                await columnStore.add(column);
+            }
+        }
+        await upgradeTasksKanbanColumns(tasksStore);
     },
 });
 
@@ -73,6 +96,27 @@ function rejectIdb(key: string, ev: Event) {
     if (currentResolveQueue?.length) {
         while (currentResolveQueue.length) {
             currentResolveQueue.shift().reject(ev);
+        }
+    }
+}
+
+async function upgradeTasksKanbanColumns(tasksStore: IDBPObjectStore<unknown, string[], typeof STORE_TASKS, "versionchange">) {
+    const tasks: Task[] = await tasksStore.getAll();
+    const tasksToUpdate: Record<string, Task[]> = {};
+    for (const task of tasks) {
+        const taskColumnId = task.columnId;
+        if (!taskColumnId) {
+            task.columnId = task.status;
+            if (typeof tasksToUpdate[task.columnId] === 'undefined') {
+                tasksToUpdate[task.columnId] = [];
+            }
+            task.position = tasksToUpdate[task.columnId].length;
+            tasksToUpdate[task.columnId].push(task);
+        }
+    }
+    for (const columnId in tasksToUpdate) {
+        for (let i = 0; i < tasksToUpdate[columnId].length; i++) {
+            await tasksStore.put(tasksToUpdate[columnId][i]);
         }
     }
 }

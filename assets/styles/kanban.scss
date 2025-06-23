@@ -23,6 +23,9 @@ main {
     flex-grow: 1; /* Expands to fill the available space between header and footer */
     padding: 1rem 0;
     display: flex;
+    // dragging scroll sea rapido
+    height: 100vh;
+    overflow-y: auto;
 }
 
 .kanban-column {
@@ -33,6 +36,10 @@ main {
     }
     &:last-child {
         padding-right: 1rem;
+    }
+
+    &-droppable-content {
+        height: 100%;
     }
 
     &-content {

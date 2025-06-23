@@ -6,7 +6,7 @@ export type TaskReducerActionType = 'newTaskOpened'|'editTaskOpened'|'modalClose
 export type TaskState = { task: TaskData|Task, modalShow: boolean, crudType: TaskReducerCrudType|null };
 export type TaskReducerAction = {type: TaskReducerActionType, task?: Task};
 
-export const taskDataEmpty = (): TaskData => ({name: '', description: '', status: 'todo'});
+export const taskDataEmpty = (): TaskData => ({name: '', description: '', status: 'todo', columnId: 'todo', position: 0});
 export const taskStateClean = (): TaskState => ({ task: taskDataEmpty(), modalShow: false, crudType: null });
 
 export const TaskContext = createContext<TaskState>(null);
