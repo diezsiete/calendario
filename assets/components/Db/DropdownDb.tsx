@@ -1,6 +1,5 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
 import Dropdown, { DropdownDivider, DropdownItemButton } from "@components/Dropdown";
-import { getDatabase, exportIdb, handleUploadRestoreFile } from "@lib/idb/idb";
 import { DbContext, DbDispatch } from "@components/Db/DbContextProvider";
 import rem from "@lib/idb/rem";
 
@@ -8,7 +7,7 @@ export default function DropdownDb() {
     const dbContext = useContext(DbContext);
     const dbDispatch = useContext(DbDispatch);
     const [dbs, setDbs] = useState<IDBDatabaseInfo[]>([]);
-    const [dbActive, setDbActive] = useState(getDatabase().name);
+    const [dbActive, setDbActive] = useState(rem.dbName);
     const inputFileRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -40,10 +39,24 @@ export default function DropdownDb() {
             </DropdownItemButton>
         )}
         <DropdownDivider />
-        <DropdownItemButton onClick={exportIdb}>Export DB</DropdownItemButton>
+        <DropdownItemButton onClick={() => rem.export()}>Export DB</DropdownItemButton>
         <DropdownItemButton onClick={() => inputFileRef.current?.click()}>
             Import DB
             <input className="d-none" type="file" accept=".json" onChange={handleUploadRestoreFile} ref={inputFileRef}/>
         </DropdownItemButton>
     </Dropdown>
+}
+
+export function handleUploadRestoreFile(event: ChangeEvent) {
+    const file = (event.target as HTMLInputElement).files[0];
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+        const json = JSON.parse(e.target.result as any);
+        await rem.import(json);
+        alert('Database restored!');
+        window.location.reload()
+    };
+
+    reader.readAsText(file);
 }

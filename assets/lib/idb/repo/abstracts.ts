@@ -5,9 +5,9 @@ import { Rem } from "@lib/idb/rem";
 export type OrderBySort = 'ASC'|'DESC';
 
 export abstract class AbstractRepo extends SingletonAsync {
-    protected constructor(
+    constructor(
+        public readonly store: string,
         protected readonly rem: Rem,
-        protected readonly store: string
     ) {
         super();
     }
@@ -16,19 +16,25 @@ export abstract class AbstractRepo extends SingletonAsync {
         return this.rem.getDb();
     }
 
+    protected fetchAll<T>(): Promise<T[]> {
+        return AbstractRepo.singletonAsync(this, `fetchAll`, () => this.db.getAll(this.store));
+    }
+
     protected fetchAllByIndex<T>(index: string, value: string|number): Promise<T[]> {
-        return AbstractQuery.singletonAsync(this, `fetchAllByIndex${index}${value}`, async () =>
+        // const idx = this.db.transaction(this.store).store.index(index);
+        // return idx.getAll(value);
+        return AbstractRepo.singletonAsync(this, `fetchAllByIndex${index}${value}`, () =>
             this.db.transaction(this.store).store.index(index).getAll(value)
         )
     }
     protected fetchAllByOrderedIndex<T>(index: string): Promise<T[]> {
-        return AbstractQuery.singletonAsync(this, `fetchAllByOrderedIndex${index}`, async () =>
+        return AbstractRepo.singletonAsync(this, `fetchAllByOrderedIndex${index}`, async () =>
             this.db.getAllFromIndex(this.store, index, IDBKeyRange.bound(-Infinity, Infinity))
         )
     }
 
     protected add<T>(data: Partial<T>): Promise<T> {
-        return AbstractQuery.singletonAsync(this, AbstractQuery.createOperationObjectKey('add', data), async () => {
+        return AbstractRepo.singletonAsync(this, AbstractRepo.createOperationObjectKey('add', data), async () => {
             const id = await this.db.add(this.store, data)
             return {id, ...data} as T;
         })

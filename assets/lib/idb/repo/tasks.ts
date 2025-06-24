@@ -1,7 +1,6 @@
-import rem, { Rem } from "@lib/idb/rem";
+import rem from "@lib/idb/rem";
 import { AbstractQuery, AbstractRepo, OrderBySort } from "@lib/idb/repo/abstracts";
-import { STORE_TASKS } from "@lib/idb/idb";
-import { Task, TaskData } from "@type/Model";
+import { Task, TaskData, TaskStatus } from "@type/Model";
 import { arrayMove } from "@dnd-kit/sortable";
 
 export default class TasksRepo extends AbstractRepo {
@@ -10,12 +9,22 @@ export default class TasksRepo extends AbstractRepo {
     private tasksByColumn: Record<string, Task[]> = {};
     private tasks: Map<number, Task> = new Map;
 
-    constructor(rem: Rem) {
-        super(rem, STORE_TASKS)
-    }
-
     get query() {
         return this._query ? this._query : this._query = new TasksQuery(this.rem, this.store);
+    }
+
+    fetchAllTasks(): Promise<Task[]> {
+        return TasksRepo.singletonAsync(this, `fetchAll`, async () => {
+            const tasks: Task[] = await this.db.getAll(this.store);
+            tasks.forEach(task => this.tasks.set(task.id, task))
+            return tasks;
+        });
+    }
+
+    async fetchAllByColumnId(columnId: string): Promise<Task[]> {
+        this.tasksByColumn[columnId] = await this.query.whereColumnIdOrderByPosition(columnId);
+        this.tasksByColumn[columnId].forEach(task => this.tasks.set(task.id, task))
+        return this.tasksByColumn[columnId]
     }
 
     newTask(): TaskData {
@@ -24,6 +33,9 @@ export default class TasksRepo extends AbstractRepo {
 
     getTask(taskId: number): Task|undefined {
         return this.tasks.get(taskId);
+    }
+    getTasks(): Task[] {
+        return Array.from(this.tasks, value => value[1]);
     }
 
     getTasksByColumn(columnId: string) {
@@ -51,12 +63,6 @@ export default class TasksRepo extends AbstractRepo {
         return false;
     }
 
-    async fetchAllByColumnId(columnId: string): Promise<Task[]> {
-        this.tasksByColumn[columnId] = await this.query.whereColumnIdOrderByPosition(columnId);
-        this.tasksByColumn[columnId].forEach(task => this.tasks.set(task.id, task))
-        return this.tasksByColumn[columnId]
-    }
-
     updateTasksWithColumnId(columnId: string): Promise<void> {
         return this.writeTransaction(async ({ store }) => {
             for (const task of this.tasksByColumn[columnId]) {
@@ -77,7 +83,7 @@ export default class TasksRepo extends AbstractRepo {
             const task = {id, ...data} as Task;
 
             this.tasks.set(id, task);
-            this.tasksByColumn[data.columnId].push(task);
+            this.tasksByColumn[data.columnId]?.push(task);
 
             return task;
         })
@@ -89,20 +95,26 @@ export default class TasksRepo extends AbstractRepo {
             return new Promise(resolve => resolve(undefined))
         }
         return this.writeTransaction<Task>(async ({ store }) => {
-            const taskUpdated = {...task, ...data} as Task;
+            // const taskUpdated = {...task, ...data} as Task;
+            const taskUpdated = {...task} as Task;
+            for (const key in data) {
+                if (data[key] !== undefined) {
+                    taskUpdated[key] = data[key];
+                }
+            }
             await store.put(taskUpdated);
 
             this.tasks.set(taskUpdated.id, taskUpdated);
-            this.tasksByColumn[taskUpdated.columnId] = this.tasksByColumn[taskUpdated.columnId].map(
+            this.tasksByColumn[taskUpdated.columnId] = this.tasksByColumn[taskUpdated.columnId]?.map(
                 task => task.id === taskUpdated.id ? taskUpdated : task
             );
 
             return taskUpdated;
         });
     }
-    async updateTaskTimersTotal(taskId: number): Promise<number> {
+    async updateTaskTimersTotal(taskId: number, status?: TaskStatus): Promise<number> {
         const timersTotal = await rem.timers.fetchTimersTotalByTask(taskId);
-        await this.updateTask(taskId, { timersTotal })
+        await this.updateTask(taskId, { timersTotal, status })
         return timersTotal;
     }
 
@@ -123,13 +135,13 @@ export default class TasksRepo extends AbstractRepo {
     }
 
     private removeTaskFromColumn(taskId: number, columnId: string) {
-        this.tasksByColumn[columnId] = this.tasksByColumn[columnId].filter(task => task.id !== taskId);
+        this.tasksByColumn[columnId] = this.tasksByColumn[columnId]?.filter(task => task.id !== taskId);
     }
 }
 
 class TasksQuery extends AbstractQuery {
     whereColumnIdOrderByPosition(columnId: string, sort: OrderBySort = 'ASC') {
-        return AbstractQuery.singletonAsync<Task[]>(this, `whereColumnIdOrderByPosition${sort}`, async () => {
+        return TasksQuery.singletonAsync<Task[]>(this, `whereColumnIdOrderByPosition${sort}`, async () => {
             const orderBound0 = sort === 'ASC' ? -Infinity : Infinity;
             const orderBound1 = sort === 'ASC' ? Infinity : -Infinity;
             return this.db.getAllFromIndex(

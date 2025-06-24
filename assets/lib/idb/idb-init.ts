@@ -1,54 +1,25 @@
-import { IDBPDatabase, IDBPObjectStore, openDB } from "idb";
-import { STORE_KANBAN_COLUMNS, STORE_TASKS, STORE_TIMERS } from "@lib/idb/idb";
+import { IDBPObjectStore, openDB } from "idb";
 import { taskStatuses } from "@lib/state/task";
 import { KanbanColumn, Task } from "@type/Model";
-
-const dbs: Record<string, IDBPDatabase> = {};
-const resolving: Record<string, {resolve: (db: IDBPDatabase) => void, reject: (ev: Event) => void}> = {};
-const resolveQueue: Record<string, {resolve: (db: IDBPDatabase) => void, reject: (ev: Event) => void}[]> = {};
-
-export default function idbInit(name: string, version: number): Promise<IDBPDatabase> {
-    // return openIDB(name, version);
-    return new Promise((resolve, reject) => {
-        const key = name + version;
-        const db = dbs[key]
-        if (db) {
-            resolve(db);
-        } else {
-            let currentResolving = resolving[key];
-            if (currentResolving) {
-                if (typeof resolveQueue[key] === 'undefined') {
-                    resolveQueue[key] = [];
-                }
-                resolveQueue[key].push({resolve, reject});
-            } else {
-                currentResolving = {resolve, reject};
-                resolving[key] = currentResolving;
-                openIDB(name, version)
-                    .then(db => resolveIdb(key, db))
-                    .catch(e => rejectIdb(key, e))
-            }
-        }
-    });
-}
+import rem from "@lib/idb/rem";
 
 export const openIDB = async (name: string, version: number) => openDB(name, version, {
     async upgrade(db, oldVersion, newVersion, transaction) {
-        if (!db.objectStoreNames.contains(STORE_TASKS)) {
-            db.createObjectStore(STORE_TASKS, { keyPath: 'id', autoIncrement: true });
+        if (!db.objectStoreNames.contains(rem.tasks.store)) {
+            db.createObjectStore(rem.tasks.store, { keyPath: 'id', autoIncrement: true });
         }
-        if (!db.objectStoreNames.contains(STORE_TIMERS)) {
-            db.createObjectStore(STORE_TIMERS, {
+        if (!db.objectStoreNames.contains(rem.timers.store)) {
+            db.createObjectStore(rem.timers.store, {
                 keyPath: 'id',
                 autoIncrement: true
             }).createIndex("taskId", "taskId", { unique: false });
         }
-        const tasksStore = transaction.objectStore(STORE_TASKS);
+        const tasksStore = transaction.objectStore(rem.tasks.store);
         if (!tasksStore.indexNames.contains('status')) {
             tasksStore.createIndex('status', 'status', { unique: false });
         }
-        if (!db.objectStoreNames.contains(STORE_KANBAN_COLUMNS)) {
-            const columnsStore = db.createObjectStore(STORE_KANBAN_COLUMNS, { keyPath: 'id' });
+        if (!db.objectStoreNames.contains(rem.kanbanColumns.store)) {
+            const columnsStore = db.createObjectStore(rem.kanbanColumns.store, { keyPath: 'id' });
             columnsStore.createIndex('position', 'position');
 
             tasksStore.createIndex('columnId', 'columnId');
@@ -57,7 +28,7 @@ export const openIDB = async (name: string, version: number) => openDB(name, ver
             tasksStore.createIndex('columnId_position', ['columnId', 'position']);
         }
 
-        const columnStore = transaction.objectStore(STORE_KANBAN_COLUMNS);
+        const columnStore = transaction.objectStore(rem.kanbanColumns.store);
         const countRequest = await columnStore.count();
         if (countRequest === 0) {
             const defaultColumns: KanbanColumn[] = [];
@@ -72,35 +43,7 @@ export const openIDB = async (name: string, version: number) => openDB(name, ver
     },
 });
 
-function resolveIdb(key: string, db: IDBPDatabase) {
-    const currentResolving = resolving[key];
-    if (currentResolving) {
-        dbs[key] = db;
-        currentResolving.resolve(db);
-        delete resolving[key];
-    }
-    const currentResolveQueue = resolveQueue[key];
-    if (currentResolveQueue?.length) {
-        while (currentResolveQueue.length) {
-            currentResolveQueue.shift().resolve(db);
-        }
-    }
-}
-function rejectIdb(key: string, ev: Event) {
-    const currentResolving = resolving[key];
-    if (currentResolving) {
-        currentResolving.reject(ev);
-        delete currentResolving[key];
-    }
-    const currentResolveQueue = resolveQueue[key];
-    if (currentResolveQueue?.length) {
-        while (currentResolveQueue.length) {
-            currentResolveQueue.shift().reject(ev);
-        }
-    }
-}
-
-async function upgradeTasksKanbanColumns(tasksStore: IDBPObjectStore<unknown, string[], typeof STORE_TASKS, "versionchange">) {
+async function upgradeTasksKanbanColumns(tasksStore: IDBPObjectStore<unknown, string[], typeof rem.kanbanColumns.store, "versionchange">) {
     const tasks: Task[] = await tasksStore.getAll();
     const tasksToUpdate: Record<string, Task[]> = {};
     for (const task of tasks) {

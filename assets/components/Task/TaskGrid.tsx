@@ -1,47 +1,37 @@
 import { useContext, useEffect, useState } from "react";
 import TaskCard from "@components/Task/TaskCard";
-import { TaskContext } from "@lib/state/task";
-import { getAllTasks, getAllTasksWithCompleteTimers } from '@lib/idb/tasks';
 import { match } from "@lib/util";
-import { Task } from "@type/Model";
 import { useBreakpoint } from "@lib/react";
 import { DbContext } from "@components/Db/DbContextProvider";
+import { KanbanContext } from "@lib/state/kanban-state";
+import rem from "@lib/idb/rem";
 
 export default function TaskGrid() {
-    const [tasks, setTasks] = useState<Task[]>([]);
+    const [tasks, setTasks] = useState<number[]>([]);
     const dbContext = useContext(DbContext);
-    const context = useContext(TaskContext);
-    const columns = useMasonry(tasks);
+    const kContext = useContext(KanbanContext);
+    const columns = useMasonryIds(tasks);
 
     useEffect(() => {
         if (dbContext) {
-            getAllTasks().then(tasks => setTasks(tasks))
+            rem.tasks.fetchAllTasks().then(tasks => setTasks(tasks.map(task => task.id)));
         }
     }, [dbContext]);
     useEffect(() => {
-        getAllTasksWithCompleteTimers().then(tasks => setTasks(tasks));
+        rem.tasksTimers.fetchTasksWithCompleteTimers().then(tasks => setTasks(tasks.map(task => task.id)));
     }, []);
 
     useEffect(() => {
-        if (context.crudType) {
-            setTasks(prev => {
-                if (context.crudType === 'taskInserted') {
-                    return [...prev, context.task as Task]
-                } else if (context.crudType === 'taskUpdated') {
-                    return prev.map(task => task.id === context.task.id ? context.task as Task : task)
-                } else if (context.crudType === 'taskDeleted') {
-                    return prev.filter(task => task.id !== context.task.id)
-                }
-                return prev;
-            })
+        if (kContext.dateUpd) {
+            setTasks(rem.tasks.getTasks().map(task => task.id))
         }
-    }, [context.crudType, context.task]);
+    }, [kContext.dateUpd]);
 
     return <div className="container-fluid">
         <div className="row g-3 mt-0">
 
-            {columns.map((tasks, index) => <div className="col" key={index}>{tasks.map(task =>
-                <TaskCard key={task.id} task={task} />
+            {columns.map((tasksIds, index) => <div className="col" key={index}>{tasksIds.map(taskId =>
+                <TaskCard key={taskId} taskId={taskId} />
             )}</div>)}
 
             {/*{tasks.map(task => <div className="col-md-6 col-lg-4 col-xl-3" key={task.id}>
@@ -51,10 +41,10 @@ export default function TaskGrid() {
     </div>
 }
 
-function useMasonry(tasks: Task[]) {
+function useMasonryIds(tasksIds: number[]) {
     const breakpoint = useBreakpoint();
     const [numColumns, setNumColumns] = useState(0);
-    const [columns, setColumns] = useState<Task[][]>([]);
+    const [columns, setColumns] = useState<number[][]>([]);
 
     useEffect(() => {
         if (breakpoint) {
@@ -64,19 +54,18 @@ function useMasonry(tasks: Task[]) {
 
     useEffect(() => {
         let columnsCount = 0;
-        setColumns(tasks.reduce<Task[][]>((columns, task) => {
+        setColumns(tasksIds.reduce<number[][]>((columns, taskId) => {
             if (numColumns) {
                 columnsCount = columnsCount === numColumns ? 0 : columnsCount;
                 if (columns.length < columnsCount + 1) {
                     columns.push([])
                 }
-                columns[columnsCount].push(task);
+                columns[columnsCount].push(taskId);
                 columnsCount++;
             }
             return columns;
         }, []));
-    }, [numColumns, tasks]);
+    }, [numColumns, tasksIds]);
 
     return columns;
 }
-

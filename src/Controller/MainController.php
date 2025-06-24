@@ -13,6 +13,11 @@ class MainController extends AbstractController
     {
         return $this->render('main/index.html.twig');
     }
+    #[Route('/grid')]
+    public function grid(): Response
+    {
+        return $this->render('main/grid.html.twig');
+    }
     #[Route('/kanban')]
     public function kanban(): Response
     {

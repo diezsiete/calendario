@@ -1,10 +1,10 @@
 import { ActionDispatch, createContext } from "react";
 
-export type KanbanReducerActionType = 'newTaskOpened'|'editTaskOpened'|'modalClosed'|'columnUpdated'|'taskDragged'
-export type KanbanState = { taskId: number|null, columnId: string|null, columnDateUpd: number|null, modalShow: boolean, taskDragged: {columnId: string, position: number, columnIdChanged: boolean}|null };
+export type KanbanReducerActionType = 'newTaskOpened'|'editTaskOpened'|'modalClosed'|'columnUpdated'|'taskDragged'|'taskUpdated'
+export type KanbanState = { taskId: number|null, columnId: string|null, dateUpd: number|null, modalShow: boolean, taskDragged: {columnId: string, position: number, columnIdChanged: boolean}|null };
 export type KanbanReducerAction = {type: KanbanReducerActionType, taskId?: number, columnId?: string|null, position?: number};
 
-export const kanbanStateClean = (): KanbanState => ({ taskId: null, columnId: null, columnDateUpd: null, modalShow: false, taskDragged: null });
+export const kanbanStateClean = (): KanbanState => ({ taskId: null, columnId: null, dateUpd: null, modalShow: false, taskDragged: null });
 
 export const KanbanContext = createContext<KanbanState>(null);
 export const KanbanDispatch = createContext<ActionDispatch<[action: KanbanReducerAction]>>(null);
@@ -21,7 +21,7 @@ export function kanbanReducer(state: KanbanState, action: KanbanReducerAction): 
             return { ...state, modalShow: false };
         }
         case "columnUpdated": {
-            return { ...state, modalShow: false, columnId: action.columnId, columnDateUpd: Date.now() };
+            return { ...state, modalShow: false, columnId: action.columnId, dateUpd: Date.now() };
         }
         case "taskDragged": {
             if (!action.columnId) {
@@ -35,6 +35,9 @@ export function kanbanReducer(state: KanbanState, action: KanbanReducerAction): 
                 }
             }
             return state;
+        }
+        case 'taskUpdated': {
+            return { ...state, modalShow: false, taskId: action.taskId, dateUpd: Date.now() };
         }
         default : {
             throw Error('Unknown action: ' + action.type);

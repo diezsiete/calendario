@@ -1,5 +1,4 @@
 import { IDBPDatabase } from "idb";
-import { DB_NAME, DB_VERSION } from "@lib/idb/idb";
 import { openIDB } from "@lib/idb/idb-init";
 import { AbstractRepo } from "@lib/idb/repo/abstracts";
 import KanbanColumnsRepo from "@lib/idb/repo/kanban-columns";
@@ -8,6 +7,12 @@ import { SingletonAsync } from "@lib/util/promise";
 import TimersRepo from "@lib/idb/repo/timers";
 import TasksTimersRepo from "@lib/idb/repo/tasks-timers";
 import storage from "@lib/storage";
+
+const DB_NAME = 'calendario';
+const DB_VERSION = 6;
+const STORE_TASKS = 'tasks';
+const STORE_TIMERS = 'timers';
+const STORE_KANBAN_COLUMNS = 'kanbanColumns';
 
 export class Rem extends SingletonAsync {
     private db: IDBPDatabase;
@@ -21,10 +26,10 @@ export class Rem extends SingletonAsync {
     }
 
     get tasks(): TasksRepo {
-        return this.repos['tasks'] ? this.repos['tasks'] as TasksRepo : this.repos['tasks'] = new TasksRepo(this);
+        return this.repos['tasks'] ? this.repos['tasks'] as TasksRepo : this.repos['tasks'] = new TasksRepo(STORE_TASKS, this);
     }
     get timers(): TimersRepo {
-        return this.repos['timers'] ? this.repos['timers'] as TimersRepo : this.repos['timers'] = new TimersRepo(this);
+        return this.repos['timers'] ? this.repos['timers'] as TimersRepo : this.repos['timers'] = new TimersRepo(STORE_TIMERS, this);
     }
     get tasksTimers(): TasksTimersRepo {
         return this.repos['tasksTimers']
@@ -34,7 +39,7 @@ export class Rem extends SingletonAsync {
     get kanbanColumns(): KanbanColumnsRepo {
         return this.repos['kanbanColumns']
             ? this.repos['kanbanColumns'] as KanbanColumnsRepo
-            : this.repos['kanbanColumns'] = new KanbanColumnsRepo(this);
+            : this.repos['kanbanColumns'] = new KanbanColumnsRepo(STORE_KANBAN_COLUMNS, this);
     }
 
     init() {
@@ -48,6 +53,39 @@ export class Rem extends SingletonAsync {
     async setDatabase(name: string, version: number) {
         this.setDatabaseStorageValues(name, version);
         return this.setDb();
+    }
+
+    async export() {
+        const exportData = {};
+
+        for (const storeName of this.db.objectStoreNames) {
+            exportData[storeName] = await this.db.getAll(storeName);
+        }
+
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+            type: 'application/json',
+        });
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${new Date().toLocaleDateString('en-CA')}-${this.dbName}-backup.json`;
+        a.click();
+
+        URL.revokeObjectURL(url);
+    }
+
+    async import(jsonData: object) {
+        const tx = this.db.transaction(Object.keys(jsonData), 'readwrite');
+
+        for (const storeName of Object.keys(jsonData)) {
+            const store = tx.objectStore(storeName);
+            for (const record of jsonData[storeName]) {
+                await store.put(record); // Assumes records have keys or auto-increment
+            }
+        }
+
+        await tx.done;
     }
 
     private setDatabaseStorageValues(name: string, version: number) {

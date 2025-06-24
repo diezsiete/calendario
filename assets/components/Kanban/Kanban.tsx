@@ -28,7 +28,7 @@ export default function Kanban() {
         if (!initialized || dbContext) {
             rem.kanbanColumns.fetchAllByPosition().then(async columns => {
                 for (const column of columns) {
-                    await rem.tasksTimers.fetchTasksByColumnIdWithCompleteTimers(column.id);
+                    await rem.tasksTimers.fetchTasksWithCompleteTimersByColumnId(column.id);
                 }
                 const dateUpd = Date.now();
                 setColumns(columns.map(column => ({...column, dateUpd})));
@@ -38,13 +38,13 @@ export default function Kanban() {
     }, [initialized, dbContext]);
 
     useEffect(() => {
-        if (context.columnId && context.columnDateUpd) {
+        if (context.columnId && context.dateUpd) {
             const columnId = context.columnId.includes(',') ? context.columnId.split(',') : [context.columnId]
             setColumns(value => value.map(column =>
-                columnId.includes(column.id) ? {...column, dateUpd: context.columnDateUpd} : column
+                columnId.includes(column.id) ? {...column, dateUpd: context.dateUpd} : column
             ));
         }
-    }, [context.columnId, context.columnDateUpd]);
+    }, [context.columnId, context.dateUpd]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {

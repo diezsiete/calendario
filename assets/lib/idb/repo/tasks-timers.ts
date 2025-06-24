@@ -1,6 +1,6 @@
 import { AbstractRepo } from "@lib/idb/repo/abstracts";
 import rem, { Rem } from "@lib/idb/rem";
-import { Task, Timer } from "@type/Model";
+import { Task, TaskStatus, Timer } from "@type/Model";
 
 type TaskStartedTimers = Map<number, Timer>;
 
@@ -10,7 +10,7 @@ export default class TasksTimersRepo extends AbstractRepo {
     private taskStartedTimers: TaskStartedTimers = new Map;
 
     constructor(rem: Rem) {
-        super(rem, '')
+        super('', rem)
         this.local = new LocalTimer();
     }
 
@@ -23,23 +23,37 @@ export default class TasksTimersRepo extends AbstractRepo {
         return timer;
     }
 
-    async stopTaskTimer(taskId: number, timerId: number, end?: number) {
+    async stopTaskTimer(taskId: number, timerId: number, end?: number, status?: TaskStatus) {
         await this.rem.timers.updateTimer(timerId, {end: end ?? Math.floor(Date.now() / 1000)})
         this.taskStartedTimers.delete(taskId);
-        return this.rem.tasks.updateTaskTimersTotal(taskId);
+        return this.rem.tasks.updateTaskTimersTotal(taskId, status);
     }
 
-    async fetchTasksByColumnIdWithCompleteTimers(columnId: string): Promise<Task[]> {
-        const tasks = await this.rem.tasks.fetchAllByColumnId(columnId);
-        for (const task of tasks) {
-            if (task.status === 'inprogress') {
-                await this.fixIncompleteTaskTimers(task.id)
+    fetchTasksWithCompleteTimers(): Promise<Task[]> {
+        return this.completeTasksTimers(() => this.rem.tasks.fetchAllTasks());
+    }
+
+    fetchTasksWithCompleteTimersByColumnId(columnId: string): Promise<Task[]> {
+        return this.completeTasksTimers(() => this.rem.tasks.fetchAllByColumnId(columnId));
+    }
+
+    getTaskStartedTimers(): TaskStartedTimers {
+        return this.taskStartedTimers;
+    }
+
+    private completeTasksTimers(fetch: () => Promise<Task[]>): Promise<Task[]> {
+        return TasksTimersRepo.singletonAsync(this, 'completeTasksTimers', async () => {
+            const tasks = await fetch();
+            for (const task of tasks) {
+                if (task.status === 'inprogress') {
+                    await this.completeTaskTimers(task.id)
+                }
             }
-        }
-        return tasks;
+            return tasks;
+        })
     }
 
-    async fixIncompleteTaskTimers(taskId: number) {
+    private async completeTaskTimers(taskId: number) {
         const timers = await this.rem.timers.fetchAllByTask(taskId);
         let updateTimersTotal = false;
         if (timers.filter(timer => !!timer.end).length) {
@@ -61,10 +75,6 @@ export default class TasksTimersRepo extends AbstractRepo {
         if (updateTimersTotal) {
             await this.rem.tasks.updateTaskTimersTotal(taskId)
         }
-    }
-
-    getTaskStartedTimers(): TaskStartedTimers {
-        return this.taskStartedTimers;
     }
 }
 
@@ -88,12 +98,14 @@ class LocalTimer {
 window.addEventListener('beforeunload', async () => {
     for (const [taskId, timer] of rem.tasksTimers.getTaskStartedTimers()) {
         const localSeconds = rem.tasksTimers.local.get(taskId);
-        const missingSeconds = localSeconds !== null
-            ? localSeconds - (await rem.timers.fetchTimersTotalByTask(taskId))
-            : -1;
+        let missingSeconds = -1;
+        if (localSeconds !== null) {
+            const timersTotal = await rem.timers.fetchTimersTotalByTask(taskId);
+            missingSeconds = localSeconds - timersTotal;
+        }
         if (missingSeconds > 0) {
             await rem.timers.updateTimer(timer.id, {end: timer.start + missingSeconds});
-            await rem.tasks.updateTaskTimersTotal(taskId)
+            await rem.tasks.updateTaskTimersTotal(taskId, 'paused')
             rem.tasksTimers.local.remove(taskId);
         } else {
             await rem.timers.deleteTimer(timer.id);

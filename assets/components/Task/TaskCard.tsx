@@ -1,76 +1,64 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import classNames from "classnames";
 import { StopWatchHandle } from "@components/StopWatch";
-import { Task, TaskData, TaskStatus as TypeTaskStatus, Timer } from "@type/Model";
-import { getTaskTimers, getTimersTotal, startTaskTimer, stopTaskTimer, updateTask as updateIdbTask } from '@lib/idb/tasks';
+import { Task, TaskStatus as TypeTaskStatus, Timer } from "@type/Model";
 import TaskStatus from "@components/Task/TaskStatus";
 import TaskStopWatch from "@components/Task/TaskStopWatch";
-import { TaskContext, TaskDispatch } from "@lib/state/task";
+import { KanbanDispatch } from "@lib/state/kanban-state";
+import rem from "@lib/idb/rem";
 import '@styles/components/task/task-card.scss'
 
-type TaskCardProps = { task: Task, className?: string };
-
-export default function TaskCard({ task, className }: TaskCardProps) {
-    const [stopWatchSeconds, setStopWatchSeconds] = useState(0);
-    const [endStatus, setEndStatus] = useState<TypeTaskStatus>('paused')
+export default function TaskCard({ taskId }: { taskId: number }) {
+    const task = rem.tasks.getTask(taskId);
+    const dispatch = useContext(KanbanDispatch);
     const taskCurrentTimer = useRef<Timer>(null);
-    const context = useContext(TaskContext);
-    const dispatch = useContext(TaskDispatch);
     const stopWatchRef = useRef<StopWatchHandle>(null);
+    const [stopWatchSeconds, setStopWatchSeconds] = useState(task?.timersTotal ?? 0);
+    const [endStatus, setEndStatus] = useState<TypeTaskStatus>('paused')
 
     useEffect(() => {
-        getTaskTimers(task).then(timers => setStopWatchSeconds(getTimersTotal(timers)))
-    }, [task]);
-    useEffect(() => {
-        if (context.task.id === task.id && context.task.status === 'inprogress' && (context.crudType === 'taskInserted' || (
-            context.crudType === 'taskUpdated' && !stopWatchRef.current.isRunning() // evitar update inprogress crea nuevo timer
-        ))) {
+        if (task && task.status === 'inprogress' && !stopWatchRef.current.isRunning()) {
             stopWatchRef.current?.run();
+        } else if (task && task.status !== 'inprogress' && stopWatchRef.current.isRunning()) {
+            setEndStatus(task.status);
+            stopWatchRef.current?.stop();
         }
-    }, [context.crudType, context.task.id, task.id, context.task.status]);
+    }, [task]);
+
+    if (!task) return
 
     async function startTimerHandler(start: number) {
-        taskCurrentTimer.current = await startTaskTimer(task, start);
-        updateTask(task, {status: 'inprogress'});
+        taskCurrentTimer.current = await rem.tasksTimers.startTaskTimer(task.id, start);
+        if (task.status !== 'inprogress') {
+            updateTask({ status: 'inprogress' });
+        }
     }
-
     async function endTimerHandler(end: number) {
         if (taskCurrentTimer.current) {
-            taskCurrentTimer.current = await stopTaskTimer(task, taskCurrentTimer.current.id, end);
-            if (taskCurrentTimer.current) {
-                setStopWatchSeconds(prev => prev + (end - taskCurrentTimer.current.start));
-            }
+            const timersTotal = await rem.tasksTimers.stopTaskTimer(task.id, taskCurrentTimer.current.id, end, endStatus)
+            setStopWatchSeconds(timersTotal)
+        } else {
+            updateTask({status: endStatus});
         }
-        updateTask(task, {status: endStatus});
         setEndStatus('paused');
     }
 
-    async function handleStatusChange(status: TypeTaskStatus) {
-        if (status === 'inprogress' && !stopWatchRef.current.isRunning()) {
-            stopWatchRef.current?.run();
-        } else if (status !== 'inprogress' && stopWatchRef.current.isRunning()) {
-            setEndStatus(status);
-            stopWatchRef.current?.stop();
-        } else {
-            updateTask(task, {status});
-        }
-    }
-
-    const updateTask = (task: Task, data: Partial<TaskData>) => {
-        updateIdbTask(task, data).then(taskUpdated => taskUpdated && dispatch({type: 'taskUpdated', task: taskUpdated}))
+    const updateTask = (data: Partial<Task>) => {
+        rem.tasks.updateTask(taskId, data).then(task =>
+            task && dispatch({type: 'taskUpdated', taskId: task.id})
+        );
     }
 
     return (
-        <div className={classNames('task card', className)}>
-            <div className="card-body" onClick={() => dispatch({type: 'editTaskOpened', task})}>
+        <div className='task card'>
+            <div className="card-body" onClick={() => dispatch({type: 'editTaskOpened', taskId: taskId})}>
                 <h5 className="card-title">{task.name}</h5>
                 {task.description && <p className="card-text break-words-smart">{task.description}</p>}
             </div>
             <div className="card-footer d-flex justify-content-between">
-                <TaskStatus value={task.status} onChange={handleStatusChange} />
+                <TaskStatus value={task.status} onChange={status => updateTask({ status })} />
                 <TaskStopWatch taskId={task.id} onStart={startTimerHandler} onEnd={endTimerHandler} ref={stopWatchRef}
                                seconds={stopWatchSeconds} disabled={task.status === 'done'} />
             </div>
         </div>
-    )
+    );
 }

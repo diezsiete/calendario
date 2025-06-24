@@ -1,12 +1,7 @@
-import { Rem } from "@lib/idb/rem";
 import { AbstractRepo } from "@lib/idb/repo/abstracts";
-import { STORE_TIMERS } from "@lib/idb/idb";
 import { Timer, TimerData } from "@type/Model";
 
 export default class TimersRepo extends AbstractRepo {
-    constructor(rem: Rem) {
-        super(rem, STORE_TIMERS)
-    }
 
     fetchAllByTask(taskId: number) {
         return this.fetchAllByIndex<Timer>('taskId', taskId);
