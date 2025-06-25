@@ -102,6 +102,11 @@ Encore
         }
         options.host = 'calendario';
     })
+
+    .enableBuildNotifications(true, options => {
+        options.alwaysNotify = true;
+        options.title = 'Calendario build'
+    })
 ;
 
 module.exports = Encore.getWebpackConfig();
