@@ -40,7 +40,6 @@ export function TaskCard({ task, isOverlayDragging }: TaskCardProps) {
         <div className={classNames('task card', {'is-overlay-dragging': isOverlayDragging})}>
             <div className="card-body" onClick={() => dispatch({type: 'editTaskOpened', taskId: task.id})}>
                 <h5 className="card-title">{task.name}</h5>
-                {task.description && <p className="card-text break-words-smart">{task.description}</p>}
             </div>
             <div className="card-footer d-flex justify-content-between">
                 <TaskStopWatch taskId={task.id} onStart={startTimerHandler} onEnd={endTimerHandler} ref={stopWatchRef}
@@ -73,7 +72,6 @@ export function TaskCardDragging({ task, className }: { task: Task, className?: 
         <div className={classNames('task card', className)}>
             <div className="card-body">
                 <h5 className="card-title">{task.name}</h5>
-                {task.description && <p className="card-text break-words-smart">{task.description}</p>}
             </div>
             <div className="card-footer d-flex justify-content-between">
                 <TaskStopWatchDragging seconds={task.timersTotal} />
