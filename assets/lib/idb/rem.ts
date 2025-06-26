@@ -9,7 +9,7 @@ import TasksTimersRepo from "@lib/idb/repo/tasks-timers";
 import storage from "@lib/storage";
 
 const DB_NAME = 'calendario';
-const DB_VERSION = 6;
+const DB_VERSION = 7;
 const STORE_TASKS = 'tasks';
 const STORE_TIMERS = 'timers';
 const STORE_KANBAN_COLUMNS = 'kanbanColumns';

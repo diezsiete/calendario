@@ -12,7 +12,7 @@ export default class TimersRepo extends AbstractRepo {
     }
 
     createTimer(start: number, taskId?: number) {
-        const data: TimerData = { start };
+        const data: TimerData = { start, end: null };
         if (taskId) {
             data.taskId = taskId;
         }
@@ -39,7 +39,7 @@ export default class TimersRepo extends AbstractRepo {
 
     async findLastTaskTimerWithoutEnd(taskId: number): Promise<Timer|undefined> {
         return this.iterateIndexCursor<Timer>('readwrite', 'taskId', taskId, async (cursor, timer) => {
-            if (!Object.prototype.hasOwnProperty.call(cursor.value, 'end')) {
+            if (!cursor.value.end) {
                 if (!timer) {
                     return cursor.value as Timer;
                 } else {

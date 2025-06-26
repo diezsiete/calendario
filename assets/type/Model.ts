@@ -13,7 +13,7 @@ export type TaskData = Omit<Task, 'id'> & {id?: number};
 export type Timer = {
     id: number;
     start: number;
-    end?: number;
+    end: number|null;
     taskId?: number;
 }
 export type TimerData = Omit<Timer, 'id'> & {id?: number};

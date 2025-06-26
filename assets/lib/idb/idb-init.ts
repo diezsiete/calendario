@@ -40,10 +40,18 @@ export const openIDB = async (name: string, version: number) => openDB(name, ver
             }
         }
         await upgradeTasksKanbanColumns(tasksStore);
+
+        const timersStore = transaction.objectStore(rem.timers.store);
+        if (!timersStore.indexNames.contains('start')) {
+            timersStore.createIndex('start', 'start');
+            timersStore.createIndex('end', 'end');
+            console.log('timers store indexes updated');
+        }
     },
 });
 
-async function upgradeTasksKanbanColumns(tasksStore: IDBPObjectStore<unknown, string[], typeof rem.kanbanColumns.store, "versionchange">) {
+
+async function upgradeTasksKanbanColumns(tasksStore: IDBPObjectStore<unknown, string[], typeof rem.tasks.store, "versionchange">) {
     const tasks: Task[] = await tasksStore.getAll();
     const tasksToUpdate: Record<string, Task[]> = {};
     for (const task of tasks) {
