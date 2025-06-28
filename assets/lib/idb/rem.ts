@@ -2,10 +2,10 @@ import { IDBPDatabase } from "idb";
 import { openIDB } from "@lib/idb/idb-init";
 import { AbstractRepo } from "@lib/idb/repo/abstracts";
 import CalendarTasksRepo from "@lib/idb/repo/CalendarTasksRepo";
-import KanbanColumnsRepo from "@lib/idb/repo/kanban-columns";
-import TasksRepo from "@lib/idb/repo/tasks";
-import TimersRepo from "@lib/idb/repo/timers";
-import TasksTimersRepo from "@lib/idb/repo/tasks-timers";
+import KanbanColumnsRepo from "@lib/idb/repo/KanbanColumnsRepo";
+import TasksRepo from "@lib/idb/repo/TasksRepo";
+import TimersRepo from "@lib/idb/repo/TimersRepo";
+import TasksTimersRepo from "@lib/idb/repo/TasksTimersRepo";
 import { SingletonAsync } from "@lib/util/promise";
 import storage from "@lib/storage";
 
