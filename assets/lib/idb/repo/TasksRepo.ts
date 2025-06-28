@@ -83,8 +83,9 @@ export default class TasksRepo extends AbstractRepo<Task> {
             const task = {id, ...data} as Task;
 
             this.tasks.set(id, task);
-            this.tasksByColumn[data.columnId]?.push(task);
+            this.tasksByColumn[data.columnId]?.unshift(task);
 
+            console.log('task added to ', data.columnId);
             return task;
         })
     }

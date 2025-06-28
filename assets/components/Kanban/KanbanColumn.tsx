@@ -21,8 +21,8 @@ export default function KanbanColumn({ column } : ColumnProps) {
                 <div className="kanban-column-content-header">
                     {column.title}
                 </div>
-                {/*items={tasks.map(task => task.id)}*/}
-                <SortableContext items={tasks} strategy={verticalListSortingStrategy}>
+                {/*items={tasks}*/}
+                <SortableContext items={tasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
                     <div className="kanban-column-content-body">
                         {tasks.map((task: Task) =>
                             <TaskCardSortable key={task.id} task={task} />
