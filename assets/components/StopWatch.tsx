@@ -1,7 +1,7 @@
 import { Ref, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import classNames from "classnames";
 import { getLocalTimer, setLocalTimer } from '@lib/db/local-timer';
-import { formatSeconds } from "@lib/varchar";
+import { formatSeconds } from "@lib/util/temporal";
 
 export type StopWatchHandle = { run: () => void, stop: () => void, isRunning: () => boolean };
 export type StopWatchProps = {

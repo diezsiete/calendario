@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import TimerWorker from "@lib/clock/TimerWorker";
 import classNames from "classnames";
-import { formatMinutes } from "@lib/varchar";
+import { formatSeconds } from "@lib/util/temporal";
 
 type ActiveTimer = 'work'|'rest';
 type EyeCareTimerProps = {
@@ -73,6 +73,6 @@ export default function EyeCareTimer(props: EyeCareTimerProps) {
         'btn-danger': isRunning && activeTimer === 'rest',
     })}>
         {props.children}
-        {formatMinutes(currentTime)}
+        {formatSeconds(currentTime, 'i:s')}
     </button>
 }

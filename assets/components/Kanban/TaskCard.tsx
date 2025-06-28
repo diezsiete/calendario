@@ -2,7 +2,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import classNames from "classnames";
-import TaskStopWatch, { TaskStopWatchDragging } from "@components/Task/TaskStopWatch";
+import TaskStopWatch from "@components/Task/TaskStopWatch";
 import { StopWatchHandle } from "@components/StopWatch";
 import { Task, Timer } from "@type/Model";
 import { KanbanDispatch } from "@lib/state/kanban-state";
@@ -74,8 +74,8 @@ export function TaskCardDragging({ task, className }: { task: Task, className?: 
                 <h5 className="card-title">{task.name}</h5>
             </div>
             <div className="card-footer d-flex justify-content-between">
-                <TaskStopWatchDragging seconds={task.timersTotal} />
+                <button type="button" className='btn timer-button'>00:00:00</button>
             </div>
         </div>
-    )
+)
 }

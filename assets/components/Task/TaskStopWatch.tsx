@@ -1,5 +1,4 @@
 import StopWatch, { StopWatchProps } from "@components/StopWatch";
-import { formatSeconds } from "@lib/varchar";
 import rem from "@lib/idb/rem";
 
 type StopWatchTaskProps = { taskId: number } & Omit<StopWatchProps, 'onSecond'>;
@@ -21,12 +20,4 @@ export default function TaskStopWatch(props: StopWatchTaskProps) {
     }
 
     return <StopWatch onSecond={secondHandler} onStart={startHandler} onEnd={endHandler} {...stopWatchProps} />
-}
-
-export function TaskStopWatchDragging({ seconds } : { seconds: number }) {
-    return (
-        <button type="button" className='btn timer-button'>
-            {formatSeconds(seconds)}
-        </button>
-    )
 }
