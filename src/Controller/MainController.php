@@ -23,4 +23,9 @@ class MainController extends AbstractController
     {
         return $this->render('main/kanban.html.twig');
     }
+    #[Route('/calendario')]
+    public function calendario(): Response
+    {
+        return $this->render('main/calendario.html.twig');
+    }
 }

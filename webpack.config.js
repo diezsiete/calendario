@@ -24,6 +24,7 @@ Encore
     .addEntry('app', './assets/app.tsx')
     .addEntry('grid', './assets/grid.tsx')
     .addEntry('kanban', './assets/kanban.tsx')
+    .addEntry('calendario', './assets/calendario.tsx')
     .addAliases({
         '@components': path.resolve(__dirname, 'assets/components'),
         '@lib': path.resolve(__dirname, 'assets/lib'),

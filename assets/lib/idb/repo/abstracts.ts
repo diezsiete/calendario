@@ -4,12 +4,22 @@ import { Rem } from "@lib/idb/rem";
 
 export type OrderBySort = 'ASC'|'DESC';
 
-export abstract class AbstractRepo extends SingletonAsync {
+export abstract class AbstractRepo<T = any> extends SingletonAsync {
     constructor(
         public readonly store: string,
         protected readonly rem: Rem,
     ) {
         super();
+    }
+
+    async fetchByIds(ids: number[]): Promise<T[]> {
+        const tx = this.db.transaction(this.store, 'readonly');
+        const store = tx.objectStore(this.store);
+        // Get all tasks in parallel
+        const promises = ids.map(id => store.get(id));
+        const results = await Promise.all(promises);
+        // Filter out undefined results (non-existent IDs)
+        return results.filter(task => task !== undefined);
     }
 
     protected get db(): IDBPDatabase {
@@ -21,8 +31,6 @@ export abstract class AbstractRepo extends SingletonAsync {
     }
 
     protected fetchAllByIndex<T>(index: string, value: string|number): Promise<T[]> {
-        // const idx = this.db.transaction(this.store).store.index(index);
-        // return idx.getAll(value);
         return AbstractRepo.singletonAsync(this, `fetchAllByIndex${index}${value}`, () =>
             this.db.transaction(this.store).store.index(index).getAll(value)
         )

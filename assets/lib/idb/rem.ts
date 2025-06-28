@@ -1,11 +1,12 @@
 import { IDBPDatabase } from "idb";
 import { openIDB } from "@lib/idb/idb-init";
 import { AbstractRepo } from "@lib/idb/repo/abstracts";
+import CalendarTasksRepo from "@lib/idb/repo/CalendarTasksRepo";
 import KanbanColumnsRepo from "@lib/idb/repo/kanban-columns";
 import TasksRepo from "@lib/idb/repo/tasks";
-import { SingletonAsync } from "@lib/util/promise";
 import TimersRepo from "@lib/idb/repo/timers";
 import TasksTimersRepo from "@lib/idb/repo/tasks-timers";
+import { SingletonAsync } from "@lib/util/promise";
 import storage from "@lib/storage";
 
 const DB_NAME = 'calendario';
@@ -23,6 +24,12 @@ export class Rem extends SingletonAsync {
     }
     get dbVersion(): number {
         return storage.get('dbv', DB_VERSION);
+    }
+
+    get calendarTasks(): CalendarTasksRepo {
+        return this.repos['calendarTasks']
+            ? this.repos['calendarTasks'] as CalendarTasksRepo
+            : this.repos['calendarTasks'] = new CalendarTasksRepo(this);
     }
 
     get tasks(): TasksRepo {

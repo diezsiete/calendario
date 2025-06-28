@@ -3,7 +3,7 @@ import { AbstractQuery, AbstractRepo, OrderBySort } from "@lib/idb/repo/abstract
 import { Task, TaskData, TaskStatus } from "@type/Model";
 import { arrayMove } from "@dnd-kit/sortable";
 
-export default class TasksRepo extends AbstractRepo {
+export default class TasksRepo extends AbstractRepo<Task> {
     private _query: TasksQuery|null = null;
 
     private tasksByColumn: Record<string, Task[]> = {};

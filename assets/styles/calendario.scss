@@ -1,0 +1,189 @@
+@import 'base';
+@import 'components/calendario/now-marker';
+
+$calendar-grid-boder-color: rgba(255, 255, 255, 0.15);
+
+html, body {
+    height: 100%;
+}
+
+.calendario-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Ensures the container takes up the full viewport height */
+}
+
+.calendar-grid-header {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    flex: 1;
+    overflow: auto;
+    min-height: 0;
+    position: relative;
+}
+
+.time-column {
+    border-right: 1px solid $calendar-grid-boder-color;
+    display: flex;
+    flex-direction: column;
+}
+
+.time-slot {
+    height: 60px;
+    font-size: 12px;
+    color: #666;
+    position: relative;
+    span {
+        position: absolute;
+        right: 0;
+        top: 0;
+        transform: translate(-10%, -50%);
+    }
+}
+
+.day-column {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid $calendar-grid-boder-color;
+}
+
+.day-header {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+    border-bottom: 1px solid $calendar-grid-boder-color;
+}
+
+.hour-cell {
+    height: 60px;
+    border-bottom: 1px solid $calendar-grid-boder-color;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+
+.day-column {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid $calendar-grid-boder-color;
+    position: relative; /* Important for absolute positioning of events */
+}
+
+/* Current time indicator (sample styling) */
+.current-time {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #e74c3c;
+    z-index: 10;
+    top: 50%;
+}
+
+.current-time::before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: -3px;
+    width: 8px;
+    height: 8px;
+    background: #e74c3c;
+    border-radius: 50%;
+}
+
+/* Flexible event styling */
+.event {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    background: #3498db;
+    color: white;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: bold;
+    opacity: 0.9;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.1s ease;
+    z-index: 5;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.event:hover {
+    opacity: 1;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.event.meeting {
+    background: #9b59b6;
+}
+
+.event.appointment {
+    background: #e67e22;
+}
+
+.event.personal {
+    background: #27ae60;
+}
+
+.event.workshop {
+    background: #e74c3c;
+}
+
+.event.conference {
+    background: #1abc9c;
+}
+.event.task {
+    background: #c999b3;
+}
+
+/* Event time display */
+.event-time {
+    font-size: 10px;
+    opacity: 0.8;
+    margin-top: 2px;
+}
+
+/* For very short events (less than 1 hour), adjust text size */
+.event.short {
+    font-size: 10px;
+    padding: 2px 6px;
+    justify-content: center;
+}
+
+.event.short .event-time {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .calendar-grid {
+        grid-template-columns: 60px repeat(7, 1fr);
+        font-size: 12px;
+    }
+
+    .time-slot, .hour-cell, .day-header {
+        height: 40px;
+    }
+
+    .day-header {
+        font-size: 12px;
+    }
+
+    .time-slot {
+        font-size: 10px;
+    }
+}

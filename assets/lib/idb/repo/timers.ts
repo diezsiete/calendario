@@ -11,6 +11,10 @@ export default class TimersRepo extends AbstractRepo {
         return this.sumTimers(timers);
     }
 
+    fetchTimersInDateRange(startUnixSeconds: number, endUnixSeconds: number): Promise<Timer[]> {
+        return this.db.getAllFromIndex(this.store, 'start', IDBKeyRange.bound(startUnixSeconds, endUnixSeconds))
+    }
+
     createTimer(start: number, taskId?: number) {
         const data: TimerData = { start, end: null };
         if (taskId) {
