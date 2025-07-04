@@ -21,14 +21,22 @@ export default class TasksRepo extends AbstractRepo<Task> {
         });
     }
 
-    async fetchAllByColumnId(columnId: string): Promise<Task[]> {
-        this.tasksByColumn[columnId] = await this.query.whereColumnIdOrderByPosition(columnId);
+    async fetchAllByColumnId(columnId: string, projectId?: number|null): Promise<Task[]> {
+        // this.tasksByColumn[columnId] = await this.query.whereColumnIdOrderByPosition(columnId);
+        this.tasksByColumn[columnId] = await this.query.getAllFromIndex(columnId, projectId);
         this.tasksByColumn[columnId].forEach(task => this.tasks.set(task.id, task))
         return this.tasksByColumn[columnId]
     }
 
     newTask(): TaskData {
-        return {name: '', description: '', status: 'todo', columnId: 'todo', position: 0};
+        return {
+            name: '',
+            description: '',
+            status: 'todo',
+            columnId: 'todo',
+            position: 0,
+            projectId: this.rem.projects.localFilter.get()
+        };
     }
 
     getTask(taskId: number): Task|undefined {
@@ -85,7 +93,6 @@ export default class TasksRepo extends AbstractRepo<Task> {
             this.tasks.set(id, task);
             this.tasksByColumn[data.columnId]?.unshift(task);
 
-            console.log('task added to ', data.columnId);
             return task;
         })
     }
@@ -141,6 +148,20 @@ export default class TasksRepo extends AbstractRepo<Task> {
 }
 
 class TasksQuery extends AbstractQuery {
+
+    getAllFromIndex(columnId: string, projectId?: number|null) {
+        let indexName: string
+        let query: IDBValidKey|IDBKeyRange;
+        if (projectId) {
+            indexName = 'projectId_columnId_position';
+            query = IDBKeyRange.bound([projectId, columnId, -Infinity], [projectId, columnId, Infinity])
+        } else {
+            indexName = 'columnId_position';
+            query = IDBKeyRange.bound([columnId, -Infinity], [columnId, Infinity])
+        }
+        return this.db.getAllFromIndex(this.store, indexName, query);
+    }
+
     whereColumnIdOrderByPosition(columnId: string, sort: OrderBySort = 'ASC') {
         return TasksQuery.singletonAsync<Task[]>(this, `whereColumnIdOrderByPosition${sort}`, async () => {
             const orderBound0 = sort === 'ASC' ? -Infinity : Infinity;

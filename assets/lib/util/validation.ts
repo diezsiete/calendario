@@ -1,0 +1,1 @@
+export const isEmpty = (value: null|number|string): boolean => !value || (typeof value === 'string' && !value.trim());

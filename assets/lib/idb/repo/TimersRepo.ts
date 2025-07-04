@@ -1,7 +1,7 @@
 import { AbstractRepo } from "@lib/idb/repo/abstracts";
 import { Timer, TimerData } from "@type/Model";
 
-export default class TimersRepo extends AbstractRepo {
+export default class TimersRepo extends AbstractRepo<Timer> {
 
     fetchAllByTask(taskId: number) {
         return this.fetchAllByIndex<Timer>('taskId', taskId);
@@ -20,11 +20,11 @@ export default class TimersRepo extends AbstractRepo {
         if (taskId) {
             data.taskId = taskId;
         }
-        return this.add<Timer>(data);
+        return this.add(data);
     }
 
     updateTimer(timer: Timer|number, data: Partial<Timer>) {
-        return this.update<Timer>(timer, data);
+        return this.update(timer, data);
     }
 
     deleteTimer(timerId: number) {

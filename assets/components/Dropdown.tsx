@@ -3,31 +3,33 @@ import classNames from "classnames";
 import BootstrapDropdown from 'bootstrap/js/dist/dropdown';
 import '@styles/components/dropdown.scss'
 
-type DropdownProps = { title: string, children: ReactNode, menuEnd?: boolean, className?: string, btnClassName?: string };
+type DropdownProps = { title: ReactNode, children: ReactNode, menuEnd?: boolean, className?: string, btnClassName?: string };
 
-export default function Dropdown(props: DropdownProps) {
+export default function Dropdown({title, children, menuEnd, className, btnClassName}: DropdownProps) {
     const dropdownRef = useRef(null);
     const bootstrapDropdownInstanceRef = useRef<BootstrapDropdown>(null);
 
     useEffect(() => {
         if (!dropdownRef.current || bootstrapDropdownInstanceRef.current) return;
-        bootstrapDropdownInstanceRef.current = new BootstrapDropdown(dropdownRef.current)
+        bootstrapDropdownInstanceRef.current = new BootstrapDropdown(dropdownRef.current, {autoClose: true})
         return () => {
-            bootstrapDropdownInstanceRef.current.dispose();
+            bootstrapDropdownInstanceRef.current?.dispose();
             bootstrapDropdownInstanceRef.current = null;
         }
     }, []);
 
     return (
-        <div className={classNames('dropdown', props.className)}>
-            <button className={classNames('btn dropdown-toggle', props.btnClassName)} type="button" data-bs-toggle="dropdown"
+        <div className={classNames('dropdown', className)}>
+            <button className={classNames('btn dropdown-toggle', btnClassName)} type="button"
+                    data-bs-toggle="dropdown"
+                    onClick={() => bootstrapDropdownInstanceRef.current?.show()}
                     aria-expanded="false" ref={dropdownRef}>
-                {props.title}
+                {title}
             </button>
             <ul className={classNames('dropdown-menu', {
-                'dropdown-menu-end': props.menuEnd
+                'dropdown-menu-end': menuEnd
             })}>
-                {props.children}
+                {children}
             </ul>
         </div>
     )
@@ -42,3 +44,7 @@ export function DropdownItemButton({ children, onClick, active, className }: Dro
 }
 
 export const DropdownDivider = () => <li><hr className="dropdown-divider"/></li>
+
+export function DropdownItemText({ children }: { children: ReactNode }) {
+    return <li><span className="dropdown-item-text">{children}</span></li>
+}

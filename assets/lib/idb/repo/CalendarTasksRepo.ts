@@ -20,7 +20,11 @@ export default class CalendarTasksRepo extends AbstractRepo {
             const tasks = await this.fetchTasksByIds(tasksIds);
 
             for (const timer of timers) {
-                const calendarTask = new CalendarTask(timer.id, timer.taskId, tasks[timer.taskId]?.name ?? '', timer.start, timer.end);
+                const task = tasks[timer.taskId];
+                const project = task?.projectId ? this.rem.projects.getProject(task.projectId) : null;
+                const calendarTask = new CalendarTask(
+                    timer.id, timer.taskId, task?.name ?? '', timer.start, timer.end, project?.color ?? '#c999b3'
+                );
                 const dayOfMonth = calendarTask.startInfo.dayOfMonth;
                 this.setCalendarTaskByDay(dayOfMonth, calendarTask);
                 // TODO si end abarcar mas de dos dias y si dura mas de una semana parar
@@ -63,6 +67,7 @@ class CalendarTask {
         public readonly name: string,
         public readonly start: number,
         public readonly end: number|null,
+        public readonly color: string,
     ) {}
 
     get startInfo() : DayInfo {

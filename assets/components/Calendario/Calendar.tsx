@@ -62,9 +62,10 @@ function Day({ day, nowMarker }: DayProps ) {
         {nowMarker}
 
         {tasks.map((task, index) => (
-            <div key={index} className={classNames('event task', {short: task.minutesDuration <= 50})} style={{
+            <div key={index} className={classNames('event', {short: task.minutesDuration <= 50})} style={{
                 top: `${task.getMinuteOfDay(day.dayOfMonth)}px`,
-                height: `${task.getMinutesDuration(day.dayOfMonth)}px`
+                height: `${task.getMinutesDuration(day.dayOfMonth)}px`,
+                backgroundColor: task.color
             }}>
                 {task.name}
                 {task.timestampDuration && (

@@ -1,5 +1,6 @@
 @import "./abstract";
 @import "abstract/bootstrap";
+@import "bootstrap-icons/font/bootstrap-icons";
 
 .btn-primary-alt {
     @include button-variant($primary-alt,  darken($primary-alt, 3%));

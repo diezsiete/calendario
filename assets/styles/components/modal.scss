@@ -1,0 +1,47 @@
+.modal {
+    &.border-0, &.border-inner {
+        .modal-content {
+            //border: var(--bs-modal-border-width) solid var(--bs-modal-border-color);
+            border: none;
+        }
+        .modal-header {
+            //border-bottom: var(--bs-modal-header-border-width) solid var(--bs-modal-header-border-color);
+            border: none;
+        }
+    }
+    &.border-inner {
+        .modal-body {
+            border-right: var(--bs-modal-border-width) solid var(--bs-modal-border-color);
+            border-left: var(--bs-modal-border-width) solid var(--bs-modal-border-color);
+        }
+        .modal-footer {
+            border: var(--bs-modal-border-width) solid var(--bs-modal-border-color);
+        }
+    }
+    &.nested {
+        z-index: 1065;
+    }
+
+    .modal-header.is-input {
+        --bs-modal-header-padding: 0;
+        input {
+            padding: 1rem;
+            font-size: 1.25rem;
+            font-weight: 500;
+            border-bottom-right-radius: var(--bs-border-radius);
+            border-bottom-left-radius: var(--bs-border-radius);
+        }
+        &:has(+.modal-body) input {
+            border-bottom-right-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+    }
+
+}
+.modal-backdrop.nested {
+    z-index: 1060;
+}
+
+.modal.untransformable .modal-dialog {
+    transform: none !important;
+}

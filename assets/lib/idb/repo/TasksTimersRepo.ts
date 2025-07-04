@@ -33,8 +33,8 @@ export default class TasksTimersRepo extends AbstractRepo {
         return this.completeTasksTimers(() => this.rem.tasks.fetchAllTasks());
     }
 
-    fetchTasksWithCompleteTimersByColumnId(columnId: string): Promise<Task[]> {
-        return this.completeTasksTimers(() => this.rem.tasks.fetchAllByColumnId(columnId));
+    fetchTasksWithCompleteTimersByColumnId(columnId: string, projectId?: number|null): Promise<Task[]> {
+        return this.completeTasksTimers(() => this.rem.tasks.fetchAllByColumnId(columnId, projectId));
     }
 
     getTaskStartedTimers(): TaskStartedTimers {

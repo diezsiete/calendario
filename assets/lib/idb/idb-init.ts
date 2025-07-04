@@ -1,4 +1,4 @@
-import { IDBPObjectStore, openDB } from "idb";
+import { IDBPDatabase, IDBPObjectStore, IDBPTransaction, openDB } from "idb";
 import { taskStatuses } from "@lib/state/task";
 import { KanbanColumn, Task } from "@type/Model";
 import rem from "@lib/idb/rem";
@@ -45,8 +45,9 @@ export const openIDB = async (name: string, version: number) => openDB(name, ver
         if (!timersStore.indexNames.contains('start')) {
             timersStore.createIndex('start', 'start');
             timersStore.createIndex('end', 'end');
-            console.log('timers store indexes updated');
         }
+        // v8
+        upgradeProjects(db, transaction);
     },
 });
 
@@ -69,5 +70,16 @@ async function upgradeTasksKanbanColumns(tasksStore: IDBPObjectStore<unknown, st
         for (let i = 0; i < tasksToUpdate[columnId].length; i++) {
             await tasksStore.put(tasksToUpdate[columnId][i]);
         }
+    }
+}
+
+function upgradeProjects(db: IDBPDatabase, transaction: IDBPTransaction<unknown, string[], 'versionchange'>) {
+    const tasksStore = transaction.objectStore(rem.tasks.store);
+    if (!db.objectStoreNames.contains(rem.projects.store)) {
+        db.createObjectStore(rem.projects.store, { keyPath: 'id', autoIncrement: true });
+        tasksStore.createIndex('projectId', 'projectId', { unique: false });
+    }
+    if (!tasksStore.indexNames.contains('projectId_columnId_position')) {
+        tasksStore.createIndex('projectId_columnId_position', ['projectId', 'columnId', 'position']);
     }
 }

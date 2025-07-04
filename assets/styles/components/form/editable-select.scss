@@ -1,0 +1,67 @@
+@import '@styles/abstract';
+
+.editable-select {
+    .btn.dropdown-toggle {
+        --#{$prefix}form-select-bg-img: #{escape-svg($form-select-indicator)};
+
+        padding: $form-select-padding-y $form-select-indicator-padding $form-select-padding-y $form-select-padding-x;
+        background-color: var(--bs-body-bg);
+        background-image: var(--#{$prefix}form-select-bg-img), var(--#{$prefix}form-select-bg-icon, none);
+        background-repeat: no-repeat;
+        background-position: $form-select-bg-position;
+        background-size: $form-select-bg-size;
+        border: $form-select-border-width solid $form-select-border-color;
+        @include border-radius($form-select-border-radius, 0);
+        &::after {
+            content: none;
+        }
+        display: flex;
+        align-items: center;
+    }
+    li.selected .dropdown-item {
+        color: var(--bs-dropdown-link-hover-color);
+        background-color: var(--bs-dropdown-link-hover-bg);
+    }
+
+    &.editable li.option {
+        display: flex;
+        &:hover {
+            background-color: var(--bs-dropdown-link-hover-bg);
+            .dropdown-item.edit {
+                color: var(--bs-dropdown-link-hover-color);
+            }
+        }
+        .dropdown-item {
+            &:hover {
+                background-color: transparent;
+            }
+            &:not(.edit) {
+                display: flex;
+                align-items: center;
+            }
+            &.edit {
+                padding-left: .5rem;
+                padding-right: .5rem;
+                width: auto;
+                color: transparent;
+                &:hover {
+                    color: $primary-alt;
+                }
+            }
+        }
+    }
+
+    .bd-placeholder-img {
+        font-size: 1.125rem;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+        text-anchor: middle;
+    }
+}
+
+@include color-mode(dark) {
+    .editable-select .btn.dropdown-toggle {
+        --#{$prefix}form-select-bg-img: #{escape-svg($form-select-indicator-dark)};
+    }
+}

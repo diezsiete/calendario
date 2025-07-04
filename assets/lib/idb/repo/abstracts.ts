@@ -26,8 +26,8 @@ export abstract class AbstractRepo<T = any> extends SingletonAsync {
         return this.rem.getDb();
     }
 
-    protected fetchAll<T>(): Promise<T[]> {
-        return AbstractRepo.singletonAsync(this, `fetchAll`, () => this.db.getAll(this.store));
+    protected fetchAll(): Promise<T[]> {
+        return this.db.getAll(this.store);
     }
 
     protected fetchAllByIndex<T>(index: string, value: string|number): Promise<T[]> {
@@ -41,19 +41,24 @@ export abstract class AbstractRepo<T = any> extends SingletonAsync {
         )
     }
 
-    protected add<T>(data: Partial<T>): Promise<T> {
+    protected add(data: Partial<T>): Promise<T> {
         return AbstractRepo.singletonAsync(this, AbstractRepo.createOperationObjectKey('add', data), async () => {
             const id = await this.db.add(this.store, data)
             return {id, ...data} as T;
         })
     }
 
-    protected update<T>(id: number|T, data: Partial<T>) {
+    protected update(id: number|T, data: Partial<T>) {
         return this.writeTransaction<T>(async ({ store }) => {
-            const record = typeof id === 'number' ? await store.get(id) as T : id;
+            let record = typeof id === 'number' ? await store.get(id) as T : id;
             if (record) {
-                const recordUpdated = {...record, ...data} as T;
-                await store.put(recordUpdated);
+                record = {...record} as T;
+                for (const key in data) {
+                    if (data[key] !== undefined) {
+                        record[key] = data[key];
+                    }
+                }
+                await store.put(record);
             }
             return record;
         })

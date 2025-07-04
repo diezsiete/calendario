@@ -2,6 +2,7 @@ import { useContext } from "react";
 import { KanbanDispatch } from "@lib/state/kanban-state";
 import EyeCare from "@components/EyeCare/EyeCare";
 import DropdownDb from "@components/Db/DropdownDb";
+import { ProjectFilter } from "@components/Project/ProjectSelect";
 
 export default function KanbanNavbar() {
     const dispatch = useContext(KanbanDispatch);
@@ -22,6 +23,7 @@ export default function KanbanNavbar() {
                             </button>
                         </li>
                     </ul>
+                    <ProjectFilter className='me-2' />
                     <EyeCare className='me-2' />
                     <DropdownDb />
                 </div>

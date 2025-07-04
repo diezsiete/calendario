@@ -15,6 +15,7 @@ import { TaskCard } from "@components/Kanban/TaskCard";
 import KanbanColumn from "@components/Kanban/KanbanColumn";
 import { KanbanColumn as KanbanColumnType } from "@type/Model";
 import { KanbanContext } from "@lib/state/kanban-state";
+import { ProjectContext } from "@lib/state/project-state";
 import rem from "@lib/idb/rem";
 
 export default function Kanban() {
@@ -23,19 +24,18 @@ export default function Kanban() {
     const [activeId, setActiveId] = useState(null);
     const dbContext = useContext(DbContext);
     const context = useContext(KanbanContext);
+    const projectContext = useContext(ProjectContext);
 
     useEffect(() => {
-        if (!initialized || dbContext) {
-            rem.kanbanColumns.fetchAllByPosition().then(async columns => {
-                for (const column of columns) {
-                    await rem.tasksTimers.fetchTasksWithCompleteTimersByColumnId(column.id);
-                }
-                const dateUpd = Date.now();
-                setColumns(columns.map(column => ({...column, dateUpd})));
-                setInitialized(true);
-            })
-        }
-    }, [initialized, dbContext]);
+        rem.kanbanColumns.fetchAllByPosition().then(async columns => {
+            for (const column of columns) {
+                await rem.tasksTimers.fetchTasksWithCompleteTimersByColumnId(column.id, projectContext.projectId);
+            }
+            const dateUpd = Date.now();
+            setColumns(columns.map(column => ({...column, dateUpd})));
+            setInitialized(true);
+        })
+    }, [dbContext, projectContext.projectId]);
 
     useEffect(() => {
         if (context.columnId && context.dateUpd) {

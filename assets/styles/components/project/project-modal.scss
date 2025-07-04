@@ -1,0 +1,15 @@
+.btn.color-picker-trigger {
+    position: relative;
+    z-index: 4;
+    &:hover, &:active, &:focus-visible {
+        background-color: transparent;
+    }
+}
+.color-picker {
+    position: absolute;
+    z-index: 1070;
+}
+
+.color-picker-hidder {
+    z-index: 1066;
+}

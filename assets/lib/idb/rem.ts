@@ -8,12 +8,14 @@ import TimersRepo from "@lib/idb/repo/TimersRepo";
 import TasksTimersRepo from "@lib/idb/repo/TasksTimersRepo";
 import { SingletonAsync } from "@lib/util/promise";
 import storage from "@lib/storage";
+import ProjectsRepo from "@lib/idb/repo/ProjectsRepo";
 
 const DB_NAME = 'calendario';
-const DB_VERSION = 7;
+const DB_VERSION = 9;
 const STORE_TASKS = 'tasks';
 const STORE_TIMERS = 'timers';
 const STORE_KANBAN_COLUMNS = 'kanbanColumns';
+const STORE_PROJECTS = 'projects';
 
 export class Rem extends SingletonAsync {
     private db: IDBPDatabase;
@@ -32,6 +34,9 @@ export class Rem extends SingletonAsync {
             : this.repos['calendarTasks'] = new CalendarTasksRepo(this);
     }
 
+    get projects(): ProjectsRepo {
+        return this.repos['projects'] ? this.repos['projects'] as ProjectsRepo : this.repos['projects'] = new ProjectsRepo(STORE_PROJECTS, this);
+    }
     get tasks(): TasksRepo {
         return this.repos['tasks'] ? this.repos['tasks'] as TasksRepo : this.repos['tasks'] = new TasksRepo(STORE_TASKS, this);
     }

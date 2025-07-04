@@ -1,3 +1,6 @@
+export type ModelData<T> = Omit<T, 'id'> & {id?: number};
+// ---------------------------------------------------------------------------------------------------------------------
+
 export type TaskStatus = 'backlog'|'todo'|'inprogress'|'paused'|'done';
 export type Task = {
     id: number;
@@ -7,6 +10,7 @@ export type Task = {
     columnId?: string;
     position?: number;
     timersTotal?: number;
+    projectId?: number|null;
 }
 export type TaskData = Omit<Task, 'id'> & {id?: number};
 
@@ -26,3 +30,11 @@ export type KanbanColumn = {
     position: number,
     dateUpd?: number,
 };
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+export type Project = {
+    id: number,
+    name: string,
+    color?: string,
+}
