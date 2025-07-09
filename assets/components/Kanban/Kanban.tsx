@@ -99,10 +99,14 @@ export default function Kanban() {
 
         if (activeColumnId === overColumnId) {
             // overId puede ser columnId si es number over es otra task: calculamos posicionamiento
-            if (typeof overId === 'number' && rem.tasks.swapTaskPosition(activeId, overId)) {
-                setColumns(value => value.map(column =>
-                    column.id === overColumnId ? {...column, dateUpd: Date.now()} : column
-                ));
+            if (typeof overId === 'number') {
+                if (rem.tasks.swapTaskPosition(activeId, overId)) {
+                    setColumns(value => value.map(column =>
+                        column.id === overColumnId ? {...column, dateUpd: Date.now()} : column
+                    ));
+                }
+            } else {
+                rem.tasks.unshiftTaskPosition(activeId);
             }
             rem.tasks.updateTasksWithColumnId(overColumnId);
         }

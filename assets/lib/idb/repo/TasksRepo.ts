@@ -62,13 +62,29 @@ export default class TasksRepo extends AbstractRepo<Task> {
         if (columnId) {
             const index = this.getTaskPositionInColumn(taskId, columnId);
             const swapIndex = this.getTaskPositionInColumn(swapId, columnId);
-            if (index >= 0 && swapIndex >= 0 && index !== swapIndex) {
-                this.tasksByColumn[columnId] = arrayMove(this.tasksByColumn[columnId], index, swapIndex);
-                this.tasksByColumn[columnId].forEach((task, index) => task.position = index);
-                return true;
+            if (index >= 0 && swapIndex >= 0) {
+                if (index !== swapIndex) {
+                    this.tasksByColumn[columnId] = arrayMove(this.tasksByColumn[columnId], index, swapIndex);
+                    this.tasksByColumn[columnId].forEach((task, index) => task.position = index);
+                    return true;
+                // cuando se pasa de col A a B en primera posicion taskId y swapId son 0, corremos todas las demas posiciones 1
+                } else if (!index) {
+                    this.unshiftTaskPosition(taskId);
+                    return true;
+                }
             }
         }
         return false;
+    }
+    unshiftTaskPosition(taskId: number): void {
+        const task = this.getTask(taskId);
+        const columnId = task?.columnId
+        if (task && columnId) {
+            let newPos = 1;
+            for (const task of this.tasksByColumn[columnId]) {
+                task.position = task.id === taskId ? 0 : newPos++;
+            }
+        }
     }
 
     updateTasksWithColumnId(columnId: string): Promise<void> {
@@ -81,17 +97,22 @@ export default class TasksRepo extends AbstractRepo<Task> {
 
     addTask(data: TaskData): Promise<Task> {
         return this.writeTransaction<Task>(async ({ store }) => {
-            const index = store.index('columnId');
+            data.timersTotal = 0;
+            data.position = 0;
             if (!data.columnId) {
                 data.columnId = data.status;
             }
-            data.position = await index.count(data.columnId);
-            data.timersTotal = 0;
 
             const id = await store.add(data) as number;
             const task = {id, ...data} as Task;
 
             this.tasks.set(id, task);
+
+            for (const task of this.tasksByColumn[data.columnId]) {
+                task.position += 1;
+                await store.put(task);
+            }
+
             this.tasksByColumn[data.columnId]?.unshift(task);
 
             return task;
