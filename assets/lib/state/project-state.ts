@@ -74,9 +74,7 @@ export function projectReducer(state: ProjectState, action: ProjectReducerAction
         case 'projectCreated':
             return {...state, modalShow: false, projects: [...state.projects, rem.projects.getProject(action.projectId)]}
         case 'projectUpdated':
-            return {...state, modalShow: false, projects: state.projects.map(project => project.id === action.projectId
-                ? rem.projects.getProject(action.projectId)
-                : project)}
+            return {...state, modalShow: false }
         case 'projectDeleted':
             return {...state, modalShow: false, projects: state.projects.filter(project => project.id !== action.projectId)}
         case 'projectSelected':

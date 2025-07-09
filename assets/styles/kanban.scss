@@ -48,8 +48,15 @@ main {
         flex-direction: column;
         border-radius: $card-border-radius;
         &-header {
-            padding: $card-cap-padding-y $card-cap-padding-x;
             color: $card-cap-color;
+            display: flex;
+            justify-content: space-between;
+            &-title {
+                padding: $card-cap-padding-y $card-cap-padding-x;
+                margin-bottom: 0;
+                font-size: var(--bs-body-font-size);
+                line-height: var(--bs-body-line-height);
+            }
         }
         &-body {
             flex: 1 1 auto;

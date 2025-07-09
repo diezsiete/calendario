@@ -28,14 +28,14 @@ export default class TasksRepo extends AbstractRepo<Task> {
         return this.tasksByColumn[columnId]
     }
 
-    newTask(): TaskData {
+    newTask(custom?: Partial<TaskData>): TaskData {
         return {
             name: '',
             description: '',
             status: 'todo',
-            columnId: 'todo',
             position: 0,
-            projectId: this.rem.projects.localFilter.get()
+            projectId: this.rem.projects.localFilter.get(),
+            ...custom
         };
     }
 
@@ -82,8 +82,9 @@ export default class TasksRepo extends AbstractRepo<Task> {
     addTask(data: TaskData): Promise<Task> {
         return this.writeTransaction<Task>(async ({ store }) => {
             const index = store.index('columnId');
-
-            data.columnId = data.status;
+            if (!data.columnId) {
+                data.columnId = data.status;
+            }
             data.position = await index.count(data.columnId);
             data.timersTotal = 0;
 

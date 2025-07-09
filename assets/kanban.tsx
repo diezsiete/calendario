@@ -1,19 +1,19 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import KanbanNavbar from "@components/Kanban/KanbanNavbar";
-import KanbanContextProvider from "@components/Kanban/KanbanContextProvider";
-import Kanban from "@components/Kanban/Kanban";
 import DbContextProvider from "@components/Db/DbContextProvider";
-import TaskModal from "@components/Kanban/TaskModal";
+import { KanbanContextProvider } from "@components/ContextProvider";
+import Kanban from "@components/Kanban/Kanban";
+import TaskModal from "@components/Task/TaskModal";
 import ProjectModal from "@components/Project/ProjectModal";
 import '@styles/kanban.scss';
+import Navbar from "@components/Navbar";
 
 const root = createRoot(document.getElementById("root"));
 root.render(
     <StrictMode>
         <DbContextProvider>
             <KanbanContextProvider>
-                <KanbanNavbar />
+                <Navbar />
                 <Kanban />
                 <TaskModal />
                 <ProjectModal />

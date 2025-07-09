@@ -3,13 +3,13 @@ import { StopWatchHandle } from "@components/StopWatch";
 import { Task, TaskStatus as TypeTaskStatus, Timer } from "@type/Model";
 import TaskStatus from "@components/Task/TaskStatus";
 import TaskStopWatch from "@components/Task/TaskStopWatch";
-import { KanbanDispatch } from "@lib/state/kanban-state";
+import { TaskModalDispatch } from "@lib/state/task-modal-state";
 import rem from "@lib/idb/rem";
 import '@styles/components/task/task-card.scss'
 
 export default function TaskCard({ taskId }: { taskId: number }) {
     const task = rem.tasks.getTask(taskId);
-    const dispatch = useContext(KanbanDispatch);
+    const dispatch = useContext(TaskModalDispatch);
     const taskCurrentTimer = useRef<Timer>(null);
     const stopWatchRef = useRef<StopWatchHandle>(null);
     const [stopWatchSeconds, setStopWatchSeconds] = useState(task?.timersTotal ?? 0);
@@ -43,14 +43,12 @@ export default function TaskCard({ taskId }: { taskId: number }) {
     }
 
     const updateTask = (data: Partial<Task>) => {
-        rem.tasks.updateTask(taskId, data).then(task =>
-            task && dispatch({type: 'taskUpdated', taskId: task.id})
-        );
+        rem.tasks.updateTask(taskId, data).then(task => task && dispatch({type: 'taskUpdated', task}));
     }
 
     return (
         <div className='task card'>
-            <div className="card-body" onClick={() => dispatch({type: 'editTaskOpened', taskId: taskId})}>
+            <div className="card-body" onClick={() => dispatch({type: 'taskModalOpened', task})}>
                 <h5 className="card-title">{task.name}</h5>
                 {task.description && <p className="card-text break-words-smart">{task.description}</p>}
             </div>

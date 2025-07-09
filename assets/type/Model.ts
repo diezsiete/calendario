@@ -12,7 +12,7 @@ export type Task = {
     timersTotal?: number;
     projectId?: number|null;
 }
-export type TaskData = Omit<Task, 'id'> & {id?: number};
+export type TaskData = ModelData<Task>
 
 export type Timer = {
     id: number;

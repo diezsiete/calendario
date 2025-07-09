@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef } from "react";
 import classNames from "classnames";
-import Modal, { ModalHandle, ModalHeader } from "@components/Modal/Modal";
+import Modal, { ModalHeader } from "@components/Modal/Modal";
 import Form, { FormHandle } from "@components/Form/Form";
 import { useSimpleForm } from "@lib/hooks/form";
 import { ProjectContext, ProjectDispatch } from "@lib/state/project-state";
@@ -13,7 +13,6 @@ export default function ProjectModal() {
     const projectContext = useContext(ProjectContext);
     const projectDispatch = useContext(ProjectDispatch);
     const formRef = useRef<FormHandle>(null);
-    const modalRef = useRef<ModalHandle>(null);
     const {data, setData, violations, updateField, submit} = useSimpleForm(rem.projects.newProject(), (name, value) => name === 'name' && isEmpty(value));
     const {colorPickerTriggerRef, colorPickerRef, colorPickerStyle, showColorPicker, hideColorPicker} = useShowColorPicker();
 
@@ -26,7 +25,6 @@ export default function ProjectModal() {
         } else {
             hideColorPicker();
         }
-        modalRef.current.display(!!projectContext.modalShow);
     }, [projectContext.modalShow, setData, hideColorPicker]);
 
     const handleColorPickerChange = (color: string) => setData(prev =>  {
@@ -54,7 +52,8 @@ export default function ProjectModal() {
     }
 
     return <>
-        <Modal id='projectModal' ref={modalRef} className='project border-inner untransformable' size='xl' centered nested
+        <Modal id='projectModal' className='project border-inner untransformable' size='xl' centered nested
+               show={!!projectContext.modalShow}
                onShown={() => formRef.current.focus()}
                backdropStatic blockEsc
                onHidePrevented={() => projectDispatch({type: 'projectClosed'})}

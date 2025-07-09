@@ -1,58 +1,46 @@
 import { useContext, useEffect, useRef } from "react";
-import Modal, { ModalBody, ModalFooter, ModalHandle, ModalHeader } from "@components/Modal/Modal";
+import Modal, { ModalBody, ModalFooter, ModalHeader } from "@components/Modal/Modal";
 import Form, { FormHandle } from "@components/Form/Form";
 import { TaskDescription, TaskName, validateTaskForm } from "@components/Task/TaskForm";
 import TaskStatus from "@components/Task/TaskStatus";
-import ConfirmButton, { ConfirmButtonHandle } from "@components/Form/ConfirmButton";
+import ConfirmButton from "@components/Form/ConfirmButton";
 import ProjectSelect from "@components/Project/ProjectSelect";
 import { useSimpleForm } from "@lib/hooks/form";
-import { KanbanContext, KanbanDispatch } from "@lib/state/kanban-state";
+import { TaskModalContext, TaskModalDispatch } from "@lib/state/task-modal-state";
 import rem from "@lib/idb/rem";
 import { Task, TaskData } from "@type/Model";
 import '@styles/components/task/task-modal.scss';
 
 export default function TaskModal() {
-    const context = useContext(KanbanContext);
-    const dispatch = useContext(KanbanDispatch);
-    const modalTaskFormRef = useRef<ModalHandle>(null);
+    const context = useContext(TaskModalContext);
+    const dispatch = useContext(TaskModalDispatch);
     const taskFormRef = useRef<FormHandle>(null);
-    const deleteConfirmRef = useRef<ConfirmButtonHandle>(null);
     const { data, setData, violations, updateField, submit } = useSimpleForm<Task|TaskData>(rem.tasks.newTask(), validateTaskForm);
 
     useEffect(() => {
-        modalTaskFormRef.current?.display(context.modalShow);
-        if (context.modalShow) {
-            setData(context.taskId ? rem.tasks.getTask(context.taskId) : rem.tasks.newTask());
-        } else {
-            deleteConfirmRef.current?.reset();
+        if (context.show) {
+            setData(context.task);
         }
-    }, [context.modalShow, context.taskId, setData]);
+    }, [context.show, context.task, setData]);
+
 
     function handleTaskUpsert(data: TaskData) {
         if (!data.id) {
-            rem.tasks.addTask(data).then(newTask => dispatch({type: 'columnUpdated', columnId: newTask.columnId}))
+            rem.tasks.addTask(data).then(task => dispatch({type: 'taskCreated', task}))
         } else {
-            const oldColumnId = data.columnId;
-            rem.tasks.updateTask(data.id, data).then(taskUpdated => {
-                const columnId = taskUpdated.columnId + (taskUpdated.columnId !== oldColumnId ? `,${oldColumnId}` : '');
-                dispatch({type: 'columnUpdated', columnId: columnId})
-            })
+            rem.tasks.updateTask(data.id, data).then(task => dispatch({type: 'taskUpdated', task}))
         }
     }
 
     function handleTaskDelete(taskId: number) {
-        rem.tasks.deleteTask(taskId).then(taskDeleted => {
-            if (taskDeleted) {
-                dispatch({type: 'columnUpdated', columnId: taskDeleted.columnId})
-            }
-        })
+        rem.tasks.deleteTask(taskId).then(task => dispatch({type: 'taskDeleted', task}))
     }
 
     return <>
-        <Modal id='kanbanTaskModal' size='xl' ref={modalTaskFormRef} className='task border-inner'
+        <Modal show={context.show} id='kanbanTaskModal' size='xl' className='task border-inner'
                onShown={() => !data.id && taskFormRef.current.focus()}
                onHidden={() => {
-                   dispatch({type: 'modalClosed'});
+                   dispatch({type: 'taskModalClosed'})
                    // resetear valores, cuando se vuelva a abrir force re-renders de inputs. Cuando modal este oculto completamente
                    setData(rem.tasks.newTask());
                }}
@@ -73,9 +61,9 @@ export default function TaskModal() {
                 <ModalFooter>
                     {data.id &&
                         <div className='flex-grow-1'>
-                            <ConfirmButton onConfirm={() => handleTaskDelete(data.id)} ref={deleteConfirmRef}/>
+                            <ConfirmButton onConfirm={() => handleTaskDelete(data.id)} reset={!context.show}/>
                         </div>}
-                    <button type="button" className="btn btn-secondary" onClick={() => dispatch({type: 'modalClosed'})}>
+                    <button type="button" className="btn btn-secondary" onClick={() => dispatch({type: 'taskModalClosed'})}>
                         Cancelar
                     </button>
                     <button className="btn btn-primary">

@@ -38,7 +38,13 @@ export default class ProjectsRepo extends AbstractRepo<Project> {
     async updateProject(project: number|Project, data: Partial<Project>) {
         const projectUpdated = await this.update(project, data);
         if (projectUpdated) {
-            this.projects = this.projects.map(project => project.id === projectUpdated.id ? projectUpdated : project);
+            // para que name en ProjectSelect cambie, si hacemos : this.projects = this.projects.map(project => project.id === projectUpdated.id ? projectUpdated : project);
+            // react no detecta el cambio en name
+            this.projects.forEach(project => {
+                if (project.id === projectUpdated.id) {
+                    project.name = projectUpdated.name;
+                }
+            })
         }
         return projectUpdated;
     }

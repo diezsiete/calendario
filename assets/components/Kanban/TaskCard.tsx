@@ -5,14 +5,14 @@ import classNames from "classnames";
 import TaskStopWatch from "@components/Task/TaskStopWatch";
 import { StopWatchHandle } from "@components/StopWatch";
 import { Task, Timer } from "@type/Model";
-import { KanbanDispatch } from "@lib/state/kanban-state";
+import { TaskModalDispatch } from "@lib/state/task-modal-state";
 import rem from "@lib/idb/rem";
 import '@styles/components/task/task-card.scss'
 
 type TaskCardProps = { task: Task, isOverlayDragging?: boolean }
 
 export function TaskCard({ task, isOverlayDragging }: TaskCardProps) {
-    const dispatch = useContext(KanbanDispatch);
+    const dispatch = useContext(TaskModalDispatch);
     const stopWatchRef = useRef<StopWatchHandle>(null);
     const taskCurrentTimer = useRef<Timer>(null);
     const [stopWatchSeconds, setStopWatchSeconds] = useState(task.timersTotal);
@@ -38,7 +38,9 @@ export function TaskCard({ task, isOverlayDragging }: TaskCardProps) {
 
     return (
         <div className={classNames('task card', {'is-overlay-dragging': isOverlayDragging})}>
-            <div className="card-body" onClick={() => dispatch({type: 'editTaskOpened', taskId: task.id})}>
+            <div className="card-body" onClick={() =>
+                dispatch({type: 'taskModalOpened', task})
+            }>
                 <h5 className="card-title">{task.name}</h5>
             </div>
             <div className="card-footer d-flex justify-content-between">
