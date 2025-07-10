@@ -12,6 +12,10 @@ export abstract class AbstractRepo<T = any> extends SingletonAsync {
         super();
     }
 
+    find(id: number): Promise<T|undefined> {
+        return this.db.get(this.store, id);
+    }
+
     async fetchByIds(ids: number[]): Promise<T[]> {
         const tx = this.db.transaction(this.store, 'readonly');
         const store = tx.objectStore(this.store);
@@ -30,7 +34,7 @@ export abstract class AbstractRepo<T = any> extends SingletonAsync {
         return this.db.getAll(this.store);
     }
 
-    protected fetchAllByIndex<T>(index: string, value: string|number): Promise<T[]> {
+    protected fetchAllByIndex(index: string, value: string|number|null): Promise<T[]> {
         return AbstractRepo.singletonAsync(this, `fetchAllByIndex${index}${value}`, () =>
             this.db.transaction(this.store).store.index(index).getAll(value)
         )
@@ -81,7 +85,7 @@ export abstract class AbstractRepo<T = any> extends SingletonAsync {
             const tx = this.db.transaction(this.store, mode);
             const index = tx.store.index(indexName);
 
-            let prev: T|undefined;
+            let prev: T|undefined = undefined;
             let cursor = await index.openCursor(IDBKeyRange.only(indexValue), direction);
             while (cursor) {
                 prev = await asyncFn(cursor, prev);

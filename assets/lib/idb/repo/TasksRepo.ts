@@ -119,8 +119,8 @@ export default class TasksRepo extends AbstractRepo<Task> {
         })
     }
 
-    updateTask(taskId: number, data: Partial<TaskData>): Promise<Task|undefined> {
-        const task = this.getTask(taskId);
+    updateTask(task: number|Task, data: Partial<TaskData>): Promise<Task|undefined> {
+        task = typeof task === 'number' ? this.getTask(task) : task;
         if (!task) {
             return new Promise(resolve => resolve(undefined))
         }
@@ -142,9 +142,10 @@ export default class TasksRepo extends AbstractRepo<Task> {
             return taskUpdated;
         });
     }
-    async updateTaskTimersTotal(taskId: number, status?: TaskStatus): Promise<number> {
+    async updateTaskTimersTotal(task: number|Task, status?: TaskStatus): Promise<number> {
+        const taskId = typeof task === 'number' ? task : task.id;
         const timersTotal = await rem.timers.fetchTimersTotalByTask(taskId);
-        await this.updateTask(taskId, { timersTotal, status })
+        await this.updateTask(task, { timersTotal, status })
         return timersTotal;
     }
 

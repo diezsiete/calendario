@@ -8,12 +8,9 @@ export const openIDB = async (name: string, version: number) => openDB(name, ver
         if (!db.objectStoreNames.contains(rem.tasks.store)) {
             db.createObjectStore(rem.tasks.store, { keyPath: 'id', autoIncrement: true });
         }
-        if (!db.objectStoreNames.contains(rem.timers.store)) {
-            db.createObjectStore(rem.timers.store, {
-                keyPath: 'id',
-                autoIncrement: true
-            }).createIndex("taskId", "taskId", { unique: false });
-        }
+
+        upgradeTimers(db, transaction);
+
         const tasksStore = transaction.objectStore(rem.tasks.store);
         if (!tasksStore.indexNames.contains('status')) {
             tasksStore.createIndex('status', 'status', { unique: false });
@@ -39,18 +36,28 @@ export const openIDB = async (name: string, version: number) => openDB(name, ver
                 await columnStore.add(column);
             }
         }
+
         await upgradeTasksKanbanColumns(tasksStore);
 
-        const timersStore = transaction.objectStore(rem.timers.store);
-        if (!timersStore.indexNames.contains('start')) {
-            timersStore.createIndex('start', 'start');
-            timersStore.createIndex('end', 'end');
-        }
-        // v8
         upgradeProjects(db, transaction);
     },
 });
 
+function upgradeTimers(db: IDBPDatabase, transaction: IDBPTransaction<unknown, string[], 'versionchange'>) {
+    if (!db.objectStoreNames.contains(rem.timers.store)) {
+        db.createObjectStore(rem.timers.store, {
+            keyPath: 'id',
+            autoIncrement: true
+        }).createIndex("taskId", "taskId", { unique: false });
+    }
+    const timersStore = transaction.objectStore(rem.timers.store);
+    if (!timersStore.indexNames.contains('start')) {
+        timersStore.createIndex('start', 'start');
+    }
+    if (timersStore.indexNames.contains('end')) {
+        timersStore.deleteIndex('end');
+    }
+}
 
 async function upgradeTasksKanbanColumns(tasksStore: IDBPObjectStore<unknown, string[], typeof rem.tasks.store, "versionchange">) {
     const tasks: Task[] = await tasksStore.getAll();

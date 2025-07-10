@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import DbContextProvider from "@components/Db/DbContextProvider";
 import ProjectContextProvider from "@components/Project/ProjectContextProvider";
-import { TaskModalContextProvider } from "@components/ContextProvider";
+import { TaskModalContextProvider } from "@components/Task/TaskContextProvider";
 import Navbar from "@components/Navbar";
 import Calendar from "@components/Calendario/Calendar";
 import TaskModal from "@components/Task/TaskModal";

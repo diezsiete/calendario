@@ -11,7 +11,7 @@ import storage from "@lib/storage";
 import ProjectsRepo from "@lib/idb/repo/ProjectsRepo";
 
 const DB_NAME = 'calendario';
-const DB_VERSION = 9;
+const DB_VERSION = 10;
 const STORE_TASKS = 'tasks';
 const STORE_TIMERS = 'timers';
 const STORE_KANBAN_COLUMNS = 'kanbanColumns';

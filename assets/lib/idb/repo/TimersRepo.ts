@@ -4,11 +4,43 @@ import { Timer, TimerData } from "@type/Model";
 export default class TimersRepo extends AbstractRepo<Timer> {
 
     fetchAllByTask(taskId: number) {
-        return this.fetchAllByIndex<Timer>('taskId', taskId);
+        return this.fetchAllByIndex('taskId', taskId);
     }
     async fetchTimersTotalByTask(taskId: number) {
         const timers = await this.fetchAllByTask(taskId);
         return this.sumTimers(timers);
+    }
+
+    findLastTaskTimerWithoutEnd(taskId: number): Promise<Timer|undefined> {
+        return this.iterateIndexCursor<Timer>('readwrite', 'taskId', taskId, async (cursor, timer) => {
+            if (!cursor.value.end) {
+                if (!timer) {
+                    return cursor.value as Timer;
+                } else {
+                    await cursor.delete();
+                }
+            }
+            return timer;
+        }, 'prev');
+    }
+
+    findTimerWithoutEnd(): Promise<Timer|undefined> {
+        return TimersRepo.singletonAsync<Timer|undefined>(this, `findTimerWithoutEnd`, async () => {
+            const tx = this.db.transaction(this.store, 'readonly');
+            const store = tx.objectStore(this.store);
+
+            let firstNullRecord: Timer|undefined = undefined;
+            let cursor = await store.openCursor();
+            while (cursor) {
+                if (cursor.value.end === null) {
+                    firstNullRecord = cursor.value as Timer;
+                    break;
+                }
+                cursor = await cursor.continue();
+            }
+            await tx.done;
+            return firstNullRecord;
+        })
     }
 
     fetchTimersInDateRange(startUnixSeconds: number, endUnixSeconds: number): Promise<Timer[]> {
@@ -39,18 +71,5 @@ export default class TimersRepo extends AbstractRepo<Timer> {
 
     sumTimers(timers: Timer[]): number {
         return timers.reduce((total, timer) => total + (timer.end && timer.start ? timer.end - timer.start : 0), 0);
-    }
-
-    async findLastTaskTimerWithoutEnd(taskId: number): Promise<Timer|undefined> {
-        return this.iterateIndexCursor<Timer>('readwrite', 'taskId', taskId, async (cursor, timer) => {
-            if (!cursor.value.end) {
-                if (!timer) {
-                    return cursor.value as Timer;
-                } else {
-                    await cursor.delete();
-                }
-            }
-            return timer;
-        }, 'prev');
     }
 }

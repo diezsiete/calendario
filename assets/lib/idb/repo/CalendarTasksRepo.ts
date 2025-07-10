@@ -74,7 +74,8 @@ class CalendarTask {
         return this._startInfo ? this._startInfo : this._startInfo = new DayInfo(this.start);
     }
     get endInfo() : DayInfo|null {
-        return this._endInfo !== false ? this._endInfo : (this._endInfo = this.end ? new DayInfo(this.end) : null);
+        return this._endInfo ? this._endInfo : this._endInfo = new DayInfo(this.end ?? Math.floor(Date.now() / 1000));
+        // return this._endInfo !== false ? this._endInfo : (this._endInfo = this.end ? new DayInfo(this.end) : null);
     }
 
     get timestampDuration() : number {

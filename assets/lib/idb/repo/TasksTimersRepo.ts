@@ -41,6 +41,16 @@ export default class TasksTimersRepo extends AbstractRepo {
         return this.taskStartedTimers;
     }
 
+    async updateRunningTaskTimer(taskId: number, timerId: number, end: number): Promise<void> {
+        await rem.timers.updateTimer(timerId, { end });
+        // evitar problemas de cache en tasks hacemos fetch aca
+        const task = await this.rem.tasks.find(taskId);
+        if (task) {
+            await rem.tasks.updateTaskTimersTotal(task)
+        }
+        this.local.remove(taskId);
+    }
+
     private completeTasksTimers(fetch: () => Promise<Task[]>): Promise<Task[]> {
         return TasksTimersRepo.singletonAsync(this, 'completeTasksTimers', async () => {
             const tasks = await fetch();
@@ -95,20 +105,18 @@ class LocalTimer {
     }
 }
 
-window.addEventListener('beforeunload', async () => {
-    for (const [taskId, timer] of rem.tasksTimers.getTaskStartedTimers()) {
-        const localSeconds = rem.tasksTimers.local.get(taskId);
-        let missingSeconds = -1;
-        if (localSeconds !== null) {
-            const timersTotal = await rem.timers.fetchTimersTotalByTask(taskId);
-            missingSeconds = localSeconds - timersTotal;
-        }
-        if (missingSeconds > 0) {
-            await rem.timers.updateTimer(timer.id, {end: timer.start + missingSeconds});
-            await rem.tasks.updateTaskTimersTotal(taskId, 'paused')
-            rem.tasksTimers.local.remove(taskId);
-        } else {
-            await rem.timers.deleteTimer(timer.id);
-        }
-    }
-});
+// window.addEventListener('beforeunload', async () => {
+//     for (const [taskId, timer] of rem.tasksTimers.getTaskStartedTimers()) {
+//         const localSeconds = rem.tasksTimers.local.get(taskId);
+//         let missingSeconds = -1;
+//         if (localSeconds !== null) {
+//             const timersTotal = await rem.timers.fetchTimersTotalByTask(taskId);
+//             missingSeconds = localSeconds - timersTotal;
+//         }
+//         if (missingSeconds > 0) {
+//             await rem.tasksTimers.updateRunningTaskTimer(taskId, timer.id, timer.start + missingSeconds);
+//         } else {
+//             await rem.timers.deleteTimer(timer.id);
+//         }
+//     }
+// });

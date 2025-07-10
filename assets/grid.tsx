@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import Navbar from "@components/Navbar";
 import TaskGrid from "@components/Task/TaskGrid";
 import DbContextProvider from "@components/Db/DbContextProvider";
-import { KanbanContextProvider } from "@components/ContextProvider";
+import KanbanContextProvider from "@components/Kanban/KanbanContextProvider";
 import TaskModal from "@components/Task/TaskModal";
 import '@styles/base.scss';
 

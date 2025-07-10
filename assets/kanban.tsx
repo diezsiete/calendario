@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import DbContextProvider from "@components/Db/DbContextProvider";
-import { KanbanContextProvider } from "@components/ContextProvider";
+import KanbanContextProvider from "@components/Kanban/KanbanContextProvider";
 import Kanban from "@components/Kanban/Kanban";
 import TaskModal from "@components/Task/TaskModal";
 import ProjectModal from "@components/Project/ProjectModal";
