@@ -43,11 +43,7 @@ export default class TasksTimersRepo extends AbstractRepo {
 
     async updateRunningTaskTimer(taskId: number, timerId: number, end: number): Promise<void> {
         await rem.timers.updateTimer(timerId, { end });
-        // evitar problemas de cache en tasks hacemos fetch aca
-        const task = await this.rem.tasks.find(taskId);
-        if (task) {
-            await rem.tasks.updateTaskTimersTotal(task)
-        }
+        await rem.tasks.updateTaskTimersTotal(taskId)
         this.local.remove(taskId);
     }
 

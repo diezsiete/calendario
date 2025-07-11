@@ -142,10 +142,9 @@ export default class TasksRepo extends AbstractRepo<Task> {
             return taskUpdated;
         });
     }
-    async updateTaskTimersTotal(task: number|Task, status?: TaskStatus): Promise<number> {
-        const taskId = typeof task === 'number' ? task : task.id;
+    async updateTaskTimersTotal(taskId: number, status?: TaskStatus): Promise<number> {
         const timersTotal = await rem.timers.fetchTimersTotalByTask(taskId);
-        await this.updateTask(task, { timersTotal, status })
+        await this.updateTask(taskId, { timersTotal, status })
         return timersTotal;
     }
 

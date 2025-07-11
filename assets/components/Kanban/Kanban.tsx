@@ -10,37 +10,21 @@ import {
     useSensors
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { DbContext } from "@components/Db/DbContextProvider";
 import { TaskCard } from "@components/Kanban/TaskCard";
 import KanbanColumn from "@components/Kanban/KanbanColumn";
 import { KanbanColumn as KanbanColumnType } from "@type/Model";
 import { KanbanContext } from "@lib/state/kanban-state";
-import { ProjectContext } from "@lib/state/project-state";
 import rem from "@lib/idb/rem";
 
 export default function Kanban() {
-    const [initialized, setInitialized] = useState(false);
     const [columns, setColumns] = useState<KanbanColumnType[]>([]);
     const [activeId, setActiveId] = useState(null);
-    const dbContext = useContext(DbContext);
     const context = useContext(KanbanContext);
-    const projectContext = useContext(ProjectContext);
-
-    useEffect(() => {
-        rem.kanbanColumns.fetchAllByPosition().then(async columns => {
-            for (const column of columns) {
-                await rem.tasksTimers.fetchTasksWithCompleteTimersByColumnId(column.id, projectContext.projectId);
-            }
-            const dateUpd = Date.now();
-            setColumns(columns.map(column => ({...column, dateUpd})));
-            setInitialized(true);
-        })
-    }, [dbContext, projectContext.projectId]);
 
     useEffect(() => {
         if (context.columnId && context.dateUpd) {
             const columnId = context.columnId.includes(',') ? context.columnId.split(',') : [context.columnId]
-            setColumns(value => value.map(column =>
+            setColumns(value => (!value.length ? rem.kanbanColumns.getAllByPosition() : value).map(column =>
                 columnId.includes(column.id) ? {...column, dateUpd: context.dateUpd} : column
             ));
         }
@@ -116,7 +100,7 @@ export default function Kanban() {
 
     const activeTask = activeId ? rem.tasks.getTask(activeId) : null;
 
-    return initialized && <main>
+    return <main>
         <DndContext
             sensors={sensors}
             onDragStart={handleDragStart}

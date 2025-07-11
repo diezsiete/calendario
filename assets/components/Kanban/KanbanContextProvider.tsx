@@ -1,8 +1,11 @@
-import { ReactNode, useContext, useEffect, useReducer } from "react";
-import { KanbanContext, KanbanDispatch, kanbanReducer, kanbanStateClean } from "@lib/state/kanban-state";
+import { ReactNode, useContext, useEffect, useReducer, useState } from "react";
+import { DbContext } from "@components/Db/DbContextProvider";
 import ProjectContextProvider from "@components/Project/ProjectContextProvider";
 import TaskContextProvider from "@components/Task/TaskContextProvider";
+import { KanbanContext, KanbanDispatch, kanbanReducer, kanbanStateClean } from "@lib/state/kanban-state";
 import { TaskModalContext } from "@lib/state/task-modal-state";
+import { ProjectContext } from "@lib/state/project-state";
+import rem from "@lib/idb/rem";
 
 export default function KanbanContextProvider({ children } : { children: ReactNode } ) {
     const [state, dispatch] = useReducer(kanbanReducer, kanbanStateClean());
@@ -11,18 +14,20 @@ export default function KanbanContextProvider({ children } : { children: ReactNo
         <KanbanContext value={state}>
             <KanbanDispatch value={dispatch}>
                 <ProjectContextProvider>
-                    <TaskContextProvider>
-                        <KanbanContextProviderInit>
-                            {children}
-                        </KanbanContextProviderInit>
-                    </TaskContextProvider>
+                    <KanbanTasksInit>
+                        <TaskContextProvider>
+                            <KanbanTaskContextConnect>
+                                {children}
+                            </KanbanTaskContextConnect>
+                        </TaskContextProvider>
+                    </KanbanTasksInit>
                 </ProjectContextProvider>
             </KanbanDispatch>
         </KanbanContext>
     )
 }
 
-function KanbanContextProviderInit({ children } : { children: ReactNode }) {
+function KanbanTaskContextConnect({ children } : { children: ReactNode }) {
     const taskModalState = useContext(TaskModalContext);
     const kanbanDispatch = useContext(KanbanDispatch);
 
@@ -38,4 +43,25 @@ function KanbanContextProviderInit({ children } : { children: ReactNode }) {
     }, [taskModalState, kanbanDispatch]);
 
     return children;
+}
+
+function KanbanTasksInit({ children } : { children: ReactNode }) {
+    const kanbanDispatch = useContext(KanbanDispatch);
+    const projectContext = useContext(ProjectContext);
+    const dbContext = useContext(DbContext);
+    const [initialized, setInitialized] = useState(false);
+
+    useEffect(() => {
+        rem.kanbanColumns.fetchAllByPosition().then(async columns => {
+            const ids = [];
+            for (const column of columns) {
+                await rem.tasksTimers.fetchTasksWithCompleteTimersByColumnId(column.id, projectContext.projectId);
+                ids.push(column.id);
+            }
+            setInitialized(true);
+            kanbanDispatch({type: 'columnUpdated', columnId: ids.join()})
+        })
+    }, [dbContext, projectContext.projectId, kanbanDispatch]);
+
+    return initialized && children;
 }
