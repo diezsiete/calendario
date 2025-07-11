@@ -1,40 +1,23 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import classNames from "classnames";
-import TaskStopWatch from "@components/Task/TaskStopWatch";
-import { StopWatchHandle } from "@components/StopWatch";
-import { Task, Timer } from "@type/Model";
+import TaskStopwatch from "@components/Task/TaskStopwatch";
+import { Task } from "@type/Model";
 import { TaskModalDispatch } from "@lib/state/task-modal-state";
-import rem from "@lib/idb/rem";
+import taskStopwatchManager from "@lib/state/taskStopwatchManager";
 import '@styles/components/task/task-card.scss'
 
 type TaskCardProps = { task: Task, isOverlayDragging?: boolean }
 
 export function TaskCard({ task, isOverlayDragging }: TaskCardProps) {
     const dispatch = useContext(TaskModalDispatch);
-    const stopWatchRef = useRef<StopWatchHandle>(null);
-    const taskCurrentTimer = useRef<Timer>(null);
-    const [stopWatchSeconds, setStopWatchSeconds] = useState(task.timersTotal);
 
     useEffect(() => {
-        if (rem.tasksTimers.local.get(task.id) !== null) {
-            rem.timers.findLastTaskTimerWithoutEnd(task.id).then(timer => {
-                if (timer && task.columnId === 'done' && !isOverlayDragging) {
-                    rem.tasksTimers.stopTaskTimer(task.id, timer.id).then(timersTotal => setStopWatchSeconds(timersTotal));
-                } else if (timer) {
-                    setStopWatchSeconds(task.timersTotal + (Math.floor(Date.now() / 1000) - timer.start));
-                    stopWatchRef.current?.run();
-                }
-            })
+        if (task.columnId === 'done' && !isOverlayDragging) {
+            taskStopwatchManager.stop(task.id);
         }
-    }, [task.id, task.timersTotal, task.columnId, isOverlayDragging]);
-
-    const startTimerHandler = async (start: number) =>
-        taskCurrentTimer.current = await rem.tasksTimers.startTaskTimer(task.id, start);
-
-    const endTimerHandler = (end: number) => taskCurrentTimer.current &&
-        rem.tasksTimers.stopTaskTimer(task.id, taskCurrentTimer.current.id, end).then(timersTotal => setStopWatchSeconds(timersTotal));
+    }, [task.id, task.columnId, isOverlayDragging]);
 
     return (
         <div className={classNames('task card', {'is-overlay-dragging': isOverlayDragging})}>
@@ -44,8 +27,7 @@ export function TaskCard({ task, isOverlayDragging }: TaskCardProps) {
                 <h5 className="card-title">{task.name}</h5>
             </div>
             <div className="card-footer d-flex justify-content-between">
-                <TaskStopWatch taskId={task.id} onStart={startTimerHandler} onEnd={endTimerHandler} ref={stopWatchRef}
-                               seconds={stopWatchSeconds} disabled={task.columnId === 'done'}/>
+                <TaskStopwatch taskId={task.id} disabled={task.columnId === 'done'} />
             </div>
         </div>
     )

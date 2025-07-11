@@ -1,32 +1,13 @@
 import { AbstractRepo } from "@lib/idb/repo/abstracts";
 import rem, { Rem } from "@lib/idb/rem";
-import { Task, TaskStatus, Timer } from "@type/Model";
-
-type TaskStartedTimers = Map<number, Timer>;
+import { Task } from "@type/Model";
 
 export default class TasksTimersRepo extends AbstractRepo {
     public readonly local: LocalTimer;
 
-    private taskStartedTimers: TaskStartedTimers = new Map;
-
     constructor(rem: Rem) {
         super('', rem)
         this.local = new LocalTimer();
-    }
-
-    async startTaskTimer(taskId: number, start?: number) {
-        let timer = await rem.timers.findLastTaskTimerWithoutEnd(taskId);
-        if (!timer) {
-            timer = await rem.timers.createTimer(start ?? Math.floor(Date.now() / 1000), taskId);
-        }
-        this.taskStartedTimers.set(taskId, timer);
-        return timer;
-    }
-
-    async stopTaskTimer(taskId: number, timerId: number, end?: number, status?: TaskStatus) {
-        await this.rem.timers.updateTimer(timerId, {end: end ?? Math.floor(Date.now() / 1000)})
-        this.taskStartedTimers.delete(taskId);
-        return this.rem.tasks.updateTaskTimersTotal(taskId, status);
     }
 
     fetchTasksWithCompleteTimers(): Promise<Task[]> {
@@ -35,10 +16,6 @@ export default class TasksTimersRepo extends AbstractRepo {
 
     fetchTasksWithCompleteTimersByColumnId(columnId: string, projectId?: number|null): Promise<Task[]> {
         return this.completeTasksTimers(() => this.rem.tasks.fetchAllByColumnId(columnId, projectId));
-    }
-
-    getTaskStartedTimers(): TaskStartedTimers {
-        return this.taskStartedTimers;
     }
 
     async updateRunningTaskTimer(taskId: number, timerId: number, end: number): Promise<void> {
@@ -100,19 +77,3 @@ class LocalTimer {
         return `timer-task-${taskId}`;
     }
 }
-
-// window.addEventListener('beforeunload', async () => {
-//     for (const [taskId, timer] of rem.tasksTimers.getTaskStartedTimers()) {
-//         const localSeconds = rem.tasksTimers.local.get(taskId);
-//         let missingSeconds = -1;
-//         if (localSeconds !== null) {
-//             const timersTotal = await rem.timers.fetchTimersTotalByTask(taskId);
-//             missingSeconds = localSeconds - timersTotal;
-//         }
-//         if (missingSeconds > 0) {
-//             await rem.tasksTimers.updateRunningTaskTimer(taskId, timer.id, timer.start + missingSeconds);
-//         } else {
-//             await rem.timers.deleteTimer(timer.id);
-//         }
-//     }
-// });

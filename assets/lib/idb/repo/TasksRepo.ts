@@ -13,16 +13,19 @@ export default class TasksRepo extends AbstractRepo<Task> {
         return this._query ? this._query : this._query = new TasksQuery(this.rem, this.store);
     }
 
-    fetchAllTasks(): Promise<Task[]> {
-        return TasksRepo.singletonAsync(this, `fetchAll`, async () => {
-            const tasks: Task[] = await this.db.getAll(this.store);
-            tasks.forEach(task => this.tasks.set(task.id, task))
-            return tasks;
+    fetchAllTasks(projectId?: number|null): Promise<Task[]> {
+        return TasksRepo.singletonAsync(this, `fetchAll${projectId}`, async () => {
+            const columns = await rem.kanbanColumns.fetchAllByPosition();
+            this.tasks = new Map;
+            this.tasksByColumn = {};
+            for (const column of columns) {
+                await this.fetchAllByColumnId(column.id, projectId);
+            }
+            return this.getTasks();
         });
     }
 
     async fetchAllByColumnId(columnId: string, projectId?: number|null): Promise<Task[]> {
-        // this.tasksByColumn[columnId] = await this.query.whereColumnIdOrderByPosition(columnId);
         this.tasksByColumn[columnId] = await this.query.getAllFromIndex(columnId, projectId);
         this.tasksByColumn[columnId].forEach(task => this.tasks.set(task.id, task))
         return this.tasksByColumn[columnId]
@@ -119,28 +122,30 @@ export default class TasksRepo extends AbstractRepo<Task> {
         })
     }
 
-    updateTask(task: number|Task, data: Partial<TaskData>): Promise<Task|undefined> {
+    async updateTask(task: number|Task, data: Partial<TaskData>): Promise<Task|undefined> {
         task = typeof task === 'number' ? this.getTask(task) : task;
-        if (!task) {
-            return new Promise(resolve => resolve(undefined))
-        }
-        return this.writeTransaction<Task>(async ({ store }) => {
-            // const taskUpdated = {...task, ...data} as Task;
-            const taskUpdated = {...task} as Task;
-            for (const key in data) {
-                if (data[key] !== undefined) {
-                    taskUpdated[key] = data[key];
-                }
+        if (!task) return;
+
+        const tx = this.db.transaction(this.store, 'readwrite');
+        const store = tx.objectStore(this.store);
+
+        const taskUpdated = {...task} as Task;
+        for (const key in data) {
+            if (data[key] !== undefined) {
+                taskUpdated[key] = data[key];
             }
-            await store.put(taskUpdated);
+        }
 
-            this.tasks.set(taskUpdated.id, taskUpdated);
-            this.tasksByColumn[taskUpdated.columnId] = this.tasksByColumn[taskUpdated.columnId]?.map(
-                task => task.id === taskUpdated.id ? taskUpdated : task
-            );
+        await store.put(taskUpdated);
 
-            return taskUpdated;
-        });
+        this.tasks.set(taskUpdated.id, taskUpdated);
+        this.tasksByColumn[taskUpdated.columnId] = this.tasksByColumn[taskUpdated.columnId]?.map(
+            task => task.id === taskUpdated.id ? taskUpdated : task
+        );
+
+        await tx.done;
+
+        return taskUpdated;
     }
     async updateTaskTimersTotal(taskId: number, status?: TaskStatus): Promise<number> {
         const timersTotal = await rem.timers.fetchTimersTotalByTask(taskId);
@@ -153,7 +158,7 @@ export default class TasksRepo extends AbstractRepo<Task> {
         if (task) {
             this.tasks.delete(taskId);
             this.removeTaskFromColumn(taskId, task.columnId);
-            await this.rem.timers.deleteTimersByTask(taskId);
+            await this.rem.timers.deleteByTask(taskId);
             await this.db.delete(this.store, taskId);
             this.rem.tasksTimers.local.remove(taskId)
             return task;

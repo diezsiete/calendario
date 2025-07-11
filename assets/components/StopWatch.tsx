@@ -78,7 +78,7 @@ export default function StopWatch({ seconds, onStart, onEnd, onSecond, className
     )
 }
 
-export function StopWatchLocalStorage({ name, className } : { name: string, className?: string }) {
+export function StopwatchLocalStorage({ name, className } : { name: string, className?: string }) {
     const [seconds, setSeconds] = useState(0);
     const start = useRef(0)
 

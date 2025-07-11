@@ -63,7 +63,7 @@ export default class TimersRepo extends AbstractRepo<Timer> {
         return this.delete(timerId);
     }
 
-    deleteTimersByTask(taskId: number) {
+    deleteByTask(taskId: number) {
         return this.iterateIndexCursor('readwrite', 'taskId', taskId, async cursor => {
             await cursor.delete();
         })

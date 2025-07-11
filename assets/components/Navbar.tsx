@@ -3,6 +3,7 @@ import EyeCare from "@components/EyeCare/EyeCare";
 import DropdownDb from "@components/Db/DropdownDb";
 import { TaskModalDispatch } from "@lib/state/task-modal-state";
 import { ProjectFilter } from "@components/Project/ProjectSelect";
+import { NavbarTaskStopwatch } from "@components/Task/TaskStopwatch";
 
 export default function Navbar() {
     const dispatch = useContext(TaskModalDispatch);
@@ -41,6 +42,7 @@ export default function Navbar() {
                             </li>
                         )}
                     </ul>
+                    <NavbarTaskStopwatch className='me-2' />
                     {navbarState.projectFilter && <ProjectFilter className='me-2'/>}
                     <EyeCare className='me-2'/>
                     <DropdownDb/>

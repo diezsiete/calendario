@@ -2,30 +2,23 @@ import { useContext, useEffect, useState } from "react";
 import TaskCard from "@components/Task/TaskCard";
 import { match } from "@lib/util/util";
 import { useBreakpoint } from "@lib/react";
-import { DbContext } from "@components/Db/DbContextProvider";
-import { KanbanContext } from "@lib/state/kanban-state";
+import { TaskModalContext } from "@lib/state/task-modal-state";
 import rem from "@lib/idb/rem";
 
 export default function TaskGrid() {
     const [tasks, setTasks] = useState<number[]>([]);
-    const dbContext = useContext(DbContext);
-    const kContext = useContext(KanbanContext);
+    const context = useContext(TaskModalContext)
     const columns = useMasonryIds(tasks);
 
     useEffect(() => {
-        if (dbContext) {
-            rem.tasks.fetchAllTasks().then(tasks => setTasks(tasks.map(task => task.id)));
-        }
-    }, [dbContext]);
-    useEffect(() => {
-        rem.tasksTimers.fetchTasksWithCompleteTimers().then(tasks => setTasks(tasks.map(task => task.id)));
+        setTasks(rem.tasks.getTasks().map(task => task.id));
     }, []);
 
     useEffect(() => {
-        if (kContext.dateUpd) {
+        if (context.dateUpd) {
             setTasks(rem.tasks.getTasks().map(task => task.id))
         }
-    }, [kContext.dateUpd]);
+    }, [context.dateUpd]);
 
     return <div className="container-fluid">
         <div className="row g-3 mt-0">

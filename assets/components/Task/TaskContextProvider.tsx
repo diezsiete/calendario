@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useReducer, useState } from "react";
+import { ReactNode, useContext, useEffect, useReducer, useState } from "react";
 import {
     TaskModalContext,
     TaskModalDispatch,
@@ -11,7 +11,11 @@ import {
     taskTimerReducer,
     taskTimerStateClean
 } from "@lib/state/task-timer-state";
+import taskStopwatch from "@lib/state/taskStopwatchManager";
 import rem from "@lib/idb/rem";
+import ProjectContextProvider from "@components/Project/ProjectContextProvider";
+import DbContextProvider, { DbContext } from "@components/Db/DbContextProvider";
+import { ProjectContext } from "@lib/state/project-state";
 
 export default function TaskContextProvider({ children } : { children: ReactNode }) {
     return <TaskModalContextProvider>
@@ -19,6 +23,20 @@ export default function TaskContextProvider({ children } : { children: ReactNode
             {children}
         </TaskTimerContextProvider>
     </TaskModalContextProvider>
+}
+
+export function TaskGridContextProvider({ children } : { children: ReactNode }) {
+    return (
+        <DbContextProvider>
+            <ProjectContextProvider>
+                <TasksInit>
+                    <TaskContextProvider>
+                        {children}
+                    </TaskContextProvider>
+                </TasksInit>
+            </ProjectContextProvider>
+        </DbContextProvider>
+    )
 }
 
 
@@ -53,24 +71,29 @@ function TaskTimerContextProviderInit({ children } : { children: ReactNode }) {
     const [initialized, setInitialized] = useState(false);
 
     useEffect(() => {
-        rem.timers.findTimerWithoutEnd().then(async timer => {
-            if (timer) {
-                let localSeconds = rem.tasksTimers.local.get(timer.taskId)
-                if (localSeconds !== null) {
-                    localSeconds -= await rem.timers.fetchTimersTotalByTask(timer.taskId);
-                    if (localSeconds >= 0) {
-                        const end = timer.start + localSeconds;
-                        const secondsPassed = Math.floor(Date.now() / 1000) - end;
-                        if (secondsPassed > 60) {
-                            console.log(`secondsPassed : ${secondsPassed} for task: ${timer.taskId} ending at ${end} : ${new Date(end * 1000).toLocaleString()}`);
-                            await rem.tasksTimers.updateRunningTaskTimer(timer.taskId, timer.id, end);
-                        }
-                    }
-                }
-            }
-            setInitialized(true);
-        })
+        taskStopwatch.handleRunningStopwatch().then(() => setInitialized(true));
     }, []);
+
+    return initialized && children;
+}
+
+function TasksInit({ children }: { children: ReactNode }) {
+    const dbContext = useContext(DbContext);
+    const projectContext = useContext(ProjectContext);
+    const [initialized, setInitialized] = useState(false);
+    const [prevProjectId, setPrevProjectId] = useState(null);
+
+    useEffect(() => {
+        rem.tasksTimers.fetchTasksWithCompleteTimers().then(() => setInitialized(true));
+    }, []);
+
+    useEffect(() => {
+        if (dbContext || projectContext.projectId || prevProjectId) {
+            setPrevProjectId(projectContext.projectId);
+            setInitialized(false);
+            rem.tasks.fetchAllTasks(projectContext.projectId).then(() => setInitialized(true));
+        }
+    }, [dbContext, projectContext.projectId, prevProjectId]);
 
     return initialized && children;
 }
