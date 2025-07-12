@@ -1,0 +1,23 @@
+@import "@styles/abstract";
+
+.navbar-task-stopwatch {
+    min-width: 0 !important;
+    flex-wrap: nowrap !important;
+    width: auto !important;
+    .input-group-text {
+        border: 1px solid $secondary;
+        color: $secondary;
+        min-width: 0; /* Allow this to shrink too */
+        //max-width: 400px;
+        span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: default;
+            font-size: .9rem;
+        }
+    }
+    &.running .input-group-text {
+        border-color: $primary-alt;
+        color: var(--bs-body-color);
+    }
+}

@@ -15,6 +15,11 @@
     @include button-outline-variant($warning-alt);
 }
 
+// si .navbar-task-stopwatch titulo es muy largo se mantenga dentro del navbar
+#root > .navbar .navbar-collapse {
+    min-width: 0;
+}
+
 .break-words-smart {
     word-break: break-word;
     overflow-wrap: anywhere;

@@ -42,8 +42,11 @@ export default function Navbar() {
                             </li>
                         )}
                     </ul>
-                    <NavbarTaskStopwatch className='me-2' />
-                    {navbarState.projectFilter && <ProjectFilter className='me-2'/>}
+
+                    {navbarState.projectFilter && <>
+                        <NavbarTaskStopwatch className='me-2' />
+                        <ProjectFilter className='me-2'/>
+                    </>}
                     <EyeCare className='me-2'/>
                     <DropdownDb/>
                 </div>
