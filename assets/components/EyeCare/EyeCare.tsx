@@ -10,10 +10,9 @@ export default function EyeCare({ className } : { className?: string }) {
 
     return <>
         <div className={classNames('btn-group', className)}>
-            <EyeCareTimer workDuration={3000} restDuration={600} onAlternate={activeTimer => setPlay(activeTimer === 'rest')}>
-                <span className="me-2">
-                    EyeCare
-                </span>
+            <EyeCareTimer workDuration={3000} restDuration={600}
+                          onAlternate={activeTimer => setPlay(activeTimer === 'rest')}>
+                <i className="bi bi-eye me-2"></i>
             </EyeCareTimer>
             <PlaySong className='me-2' play={play} />
         </div>

@@ -18,11 +18,11 @@ export default function PlaySong({ className, play = false } : { className?: str
     }, [play]);
 
     return (
-        <button type="button" className={classNames('btn', className,  {
+        <button type="button" className={classNames('btn', className, {
             'btn-outline-warning': !active,
             'btn-warning': active,
         })} onClick={() => setActive(prev => !prev)}>
-            PlaySong
+            <i className="bi bi-play-circle"></i>
         </button>
     )
 }
