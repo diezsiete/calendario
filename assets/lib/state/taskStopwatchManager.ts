@@ -10,7 +10,8 @@ class TaskStopwatchManager {
     private taskRunning: number|null = null;
     private taskStopwatch: Timer|null = null;
     private readonly stopwatch: Stopwatch;
-    public readonly lastTaskRunning = new LastTaskRunning
+    public readonly lastTaskRunning = new TaskStopwatchLocal('task-stopwatch-last');
+    public readonly localStopwatch = new LocalStopwatch();
     private seconds: number = 0
 
     private runningHandlers: Map<number, RunningHandler> = new Map
@@ -19,10 +20,10 @@ class TaskStopwatchManager {
     constructor() {
         this.stopwatch = new Stopwatch().onSecondChange(second => {
             this.seconds = second;
-            rem.tasksTimers.local.set(this.taskRunning, this.seconds);
+            this.localStopwatch.set(this.taskRunning, this.seconds);
             this.secondHandlers.get(this.taskRunning)?.(this.seconds);
             this.secondHandlers.get(0)?.(this.seconds);
-        })
+        });
     }
 
     getTaskStopwatchTotal(taskId?: number): number {
@@ -107,13 +108,13 @@ class TaskStopwatchManager {
     async handleRunningStopwatch() {
         const stopwatch = await rem.timers.findTimerWithoutEnd();
         if (stopwatch) {
-            let localSeconds = rem.tasksTimers.local.get(stopwatch.taskId);
+            let localSeconds = this.localStopwatch.get(stopwatch.taskId);
             if (localSeconds !== null) {
                 // si task no existe parar y borrar. (pasó en cambio de db)
                 const task = await rem.tasks.find(stopwatch.taskId);
                 if (!task) {
                     await rem.timers.deleteByTask(stopwatch.taskId);
-                    rem.tasksTimers.local.remove(stopwatch.taskId);
+                    this.localStopwatch.remove(stopwatch.taskId);
                     return;
                 }
 
@@ -123,7 +124,7 @@ class TaskStopwatchManager {
                     const secondsPassed = Math.floor(Date.now() / 1000) - end;
                     if (secondsPassed > 60) {
                         console.log(`secondsPassed : ${secondsPassed} for task: ${stopwatch.taskId} ending at ${end} : ${new Date(end * 1000).toLocaleString()}`);
-                        await rem.tasksTimers.updateRunningTaskTimer(stopwatch.taskId, stopwatch.id, end);
+                        await this.endTaskStopwatchRunning(stopwatch.taskId, stopwatch.id, end);
                     } else if (!this.taskRunning) {
                         this.startRunning(stopwatch.taskId, stopwatch);
                     }
@@ -141,7 +142,7 @@ class TaskStopwatchManager {
         this.taskRunning = taskId;
         this.lastTaskRunning.set(taskId);
 
-        rem.tasksTimers.local.set(taskId, 0);
+        this.localStopwatch.set(taskId, 0);
 
         this.runningHandlers.get(this.taskRunning)?.(true, this.seconds, this.taskRunning);
         this.runningHandlers.get(0)?.(true, this.seconds, this.taskRunning);
@@ -153,7 +154,7 @@ class TaskStopwatchManager {
 
     private async stopRunning(endTimestamp: number): Promise<number> {
         const taskId = this.taskRunning;
-        rem.tasksTimers.local.remove(taskId);
+        this.localStopwatch.remove(taskId);
         const totalSeconds = await this.stopTaskStopwatch(taskId, this.taskStopwatch.id, endTimestamp);
         this.runningHandlers.get(taskId)?.(false, totalSeconds, taskId);
         this.taskRunning = this.taskStopwatch = null;
@@ -174,23 +175,45 @@ class TaskStopwatchManager {
         await rem.timers.updateTimer(timerId, {end: end ?? Math.floor(Date.now() / 1000)})
         return rem.tasks.updateTaskTimersTotal(taskId);
     }
+
+    private async endTaskStopwatchRunning(taskId: number, stopwatchId: number, end: number): Promise<void> {
+        await rem.timers.updateTimer(stopwatchId, { end });
+        await rem.tasks.updateTaskTimersTotal(taskId);
+        this.localStopwatch.remove(taskId);
+    }
 }
 
-class LastTaskRunning {
-    private readonly storeKey = 'task-stopwatch-last';
+class TaskStopwatchLocal {
+    constructor(
+        private readonly storeKey: string
+    ) {}
 
-    constructor() {
-    }
-
-    get(): number|null {
-        const saved = localStorage.getItem(this.storeKey);
+    get(keyPrepend?: number|string): number|null {
+        const saved = localStorage.getItem(this.getKey(keyPrepend));
         return saved ? parseInt(saved, 10) : null;
     }
-    set(taskId: number) {
-        localStorage.setItem(this.storeKey, taskId + '');
+    set(value: number, keyPrepend?: number|string) {
+        localStorage.setItem(this.getKey(keyPrepend), value + '');
     }
-    remove() {
-        localStorage.removeItem(this.storeKey);
+    remove(keyPrepend?: number|string) {
+        localStorage.removeItem(this.getKey(keyPrepend));
+    }
+    private getKey(keyPrepend?: number|string) {
+        return this.storeKey + (keyPrepend ? keyPrepend : '');
+    }
+}
+
+class LocalStopwatch {
+    private readonly local = new TaskStopwatchLocal('task-stopwatch-');
+
+    get(taskId: number): number|null {
+        return this.local.get(taskId);
+    }
+    set(taskId: number, seconds: number) {
+        return this.local.set(seconds, taskId);
+    }
+    remove(taskId: number) {
+        this.local.remove(taskId);
     }
 }
 

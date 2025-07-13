@@ -2,6 +2,7 @@ import rem from "@lib/idb/rem";
 import { AbstractQuery, AbstractRepo, OrderBySort } from "@lib/idb/repo/abstracts";
 import { Task, TaskData, TaskStatus } from "@type/Model";
 import { arrayMove } from "@dnd-kit/sortable";
+import taskStopwatchManager from "@lib/state/taskStopwatchManager";
 
 export default class TasksRepo extends AbstractRepo<Task> {
     private _query: TasksQuery|null = null;
@@ -160,7 +161,7 @@ export default class TasksRepo extends AbstractRepo<Task> {
             this.removeTaskFromColumn(taskId, task.columnId);
             await this.rem.timers.deleteByTask(taskId);
             await this.db.delete(this.store, taskId);
-            this.rem.tasksTimers.local.remove(taskId)
+            taskStopwatchManager.localStopwatch.remove(taskId);
             return task;
         }
     }

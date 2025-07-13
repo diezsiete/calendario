@@ -55,7 +55,7 @@ function KanbanTasksInit({ children } : { children: ReactNode }) {
         rem.kanbanColumns.fetchAllByPosition().then(async columns => {
             const ids = [];
             for (const column of columns) {
-                await rem.tasksTimers.fetchTasksWithCompleteTimersByColumnId(column.id, projectContext.projectId);
+                await rem.tasks.fetchAllByColumnId(column.id, projectContext.projectId)
                 ids.push(column.id);
             }
             setInitialized(true);

@@ -84,7 +84,7 @@ function TasksInit({ children }: { children: ReactNode }) {
     const [prevProjectId, setPrevProjectId] = useState(null);
 
     useEffect(() => {
-        rem.tasksTimers.fetchTasksWithCompleteTimers().then(() => setInitialized(true));
+        rem.tasks.fetchAllTasks().then(() => setInitialized(true));
     }, []);
 
     useEffect(() => {
