@@ -1,23 +1,33 @@
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
+import classNames from "classnames";
 import EyeCare from "@components/EyeCare/EyeCare";
 import DropdownDb from "@components/Db/DropdownDb";
-import { TaskModalDispatch } from "@lib/state/task-modal-state";
 import { ProjectFilter } from "@components/Project/ProjectSelect";
 import { NavbarTaskStopwatch } from "@components/Task/TaskStopwatch";
+import WeekRangePicker from "@components/Calendario/WeekRangePicker";
+import { TaskModalDispatch } from "@lib/state/task-modal-state";
 
 export default function Navbar() {
     const dispatch = useContext(TaskModalDispatch);
-    const [navbarState, setNavbarState] = useState({createTask: false, projectFilter: false, navLink: {href: '/', title: ''}});
+    const [navbarState, navbarStateSetter] = useState({pathname: '/', createTask: false, projectFilter: false, navLink: {href: '/', title: ''}});
+
+    const setNavbarState = useCallback((createTask: boolean, projectFilter: boolean, navLinkTitle: 'Calendario'|'Kanban' = 'Calendario') => {
+        const pathname = window.location.pathname;
+        const navLink = navLinkTitle === 'Calendario' ? {href: '/calendario', title: 'Calendario'} : {href: '/kanban', title: 'Kanban'};
+        navbarStateSetter({pathname, createTask, projectFilter, navLink})
+    }, []);
 
     useEffect(() => {
         if (window.location.pathname === '/kanban') {
-            setNavbarState({createTask: false, projectFilter: true, navLink: {href: '/calendario', title: 'Calendario'}})
+            setNavbarState(false, true, 'Calendario');
+        } else if (window.location.pathname === '/calendario') {
+            setNavbarState(true, true, 'Kanban');
         } else if (window.location.pathname !== '/') {
-            setNavbarState({createTask: true, projectFilter: true, navLink: {href: '/kanban', title: 'Kanban'}})
+            setNavbarState(true, true, 'Kanban');
         } else {
-            setNavbarState({createTask: false, projectFilter: false, navLink: {href: '/kanban', title: 'Kanban'}})
+            setNavbarState(false, false, 'Kanban');
         }
-    }, []);
+    }, [setNavbarState]);
 
     return (
         <nav className="navbar navbar-expand-lg bg-body-tertiary">
@@ -28,7 +38,7 @@ export default function Navbar() {
                     <span className="navbar-toggler-icon"></span>
                 </button>
                 <div className="collapse navbar-collapse" id="navbarText">
-                    <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+                    <ul className={classNames('navbar-nav mb-2 mb-lg-0', {'me-auto': navbarState.pathname !== '/calendario'})}>
                         <li className="nav-item">
                             <a className="nav-link" href={navbarState.navLink.href}>
                                 {navbarState.navLink.title}
@@ -42,7 +52,7 @@ export default function Navbar() {
                             </li>
                         )}
                     </ul>
-
+                    {navbarState.pathname === '/calendario' && <WeekRangePicker className='ms-2 me-auto' />}
                     {navbarState.projectFilter && <>
                         <NavbarTaskStopwatch className='me-2' />
                         <ProjectFilter className='me-2'/>

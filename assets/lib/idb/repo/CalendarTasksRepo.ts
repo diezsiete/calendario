@@ -32,7 +32,7 @@ export default class CalendarTasksRepo extends AbstractRepo {
                     this.setCalendarTaskByDay(taskEvent.endInfo.dayOfMonth, taskEvent);
                 }
             }
-            // console.log(this.calendarTasksByDay)
+            // console.log(this.taskEventsByDay)
             return this.taskEventsByDay;
         })
     }

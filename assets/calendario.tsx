@@ -4,9 +4,10 @@ import DbContextProvider from "@components/Db/DbContextProvider";
 import ProjectContextProvider from "@components/Project/ProjectContextProvider";
 import { TaskModalContextProvider } from "@components/Task/TaskContextProvider";
 import Navbar from "@components/Navbar";
-import Calendar from "@components/Calendario/Calendar";
 import TaskModal from "@components/Task/TaskModal";
 import '@styles/calendario.scss';
+import CalendarContextProvider from "@components/Calendario/CalendarContextProvider";
+import CalendarGrid from "@components/Calendario/CalendarGrid";
 
 const root = createRoot(document.getElementById("root"));
 root.render(
@@ -14,9 +15,11 @@ root.render(
         <DbContextProvider>
             <ProjectContextProvider>
                 <TaskModalContextProvider>
-                    <Navbar />
-                    <Calendar />
-                    <TaskModal />
+                    <CalendarContextProvider>
+                        <Navbar />
+                        <CalendarGrid />
+                        <TaskModal />
+                    </CalendarContextProvider>
                 </TaskModalContextProvider>
             </ProjectContextProvider>
         </DbContextProvider>

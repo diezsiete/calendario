@@ -1,4 +1,4 @@
-import { DayInfo } from "@lib/calendar/WeekInfo";
+import DayInfo from "@lib/calendar/DayInfo";
 
 export default class TaskEvent {
     private _startInfo: DayInfo|null = null;

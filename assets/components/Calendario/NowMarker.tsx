@@ -1,5 +1,5 @@
-import { DayInfo } from "@lib/calendar/WeekInfo";
 import { Ref } from "react";
+import DayInfo from "@lib/calendar/DayInfo";
 
 type NowMarkerProps = { ref?: Ref<HTMLDivElement> }
 
