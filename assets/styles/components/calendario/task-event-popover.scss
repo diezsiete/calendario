@@ -1,0 +1,14 @@
+.task-event-popover {
+    background-color: #141414;
+    border: 1px solid rgb(37, 37, 37);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.88);
+
+    .name {
+        font-size: .8rem;
+        font-weight: bold;
+    }
+
+    &-confirm-button .btn {
+        font-size: .8rem;
+    }
+}

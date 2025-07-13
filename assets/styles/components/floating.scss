@@ -1,0 +1,9 @@
+@import "@styles/abstract";
+
+.floating {
+    padding: 1rem;
+    color: var(--#{$prefix}body-color);
+    background-color: var(--#{$prefix}body-bg);
+    border: 1px solid var(--#{$prefix}border-color-translucent);
+    border-radius: var(--#{$prefix}border-radius);
+}

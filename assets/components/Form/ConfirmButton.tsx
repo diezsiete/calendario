@@ -1,7 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
+import classNames from "classnames";
 import '@styles/components/form/confirm-button.scss';
 
-export default function ConfirmButton({ onConfirm, reset }: { onConfirm: () => void, reset?: boolean }) {
+type ConfirmButtonProps =  {
+    onConfirm: () => void,
+    reset?: boolean,
+    className?: string,
+    label?: ReactNode,
+    labelCancel?: ReactNode,
+    labelConfirm?: ReactNode,
+};
+export default function ConfirmButton({
+    onConfirm,
+    reset,
+    className,
+    label = 'Eliminar',
+    labelCancel = 'Cancelar',
+    labelConfirm = 'Seguro?',
+}: ConfirmButtonProps) {
     const [isConfirming, setIsConfirming] = useState(false);
 
     useEffect(() => {
@@ -15,13 +31,13 @@ export default function ConfirmButton({ onConfirm, reset }: { onConfirm: () => v
         setIsConfirming(false);
     };
 
-    return <div className='confirm-button-component position-relative d-inline-block'>
+    return <div className={classNames('confirm-button-component position-relative d-inline-block', className)}>
         <button type="button" className={`primary-button btn ${isConfirming ? 'btn-secondary' : 'btn-outline-danger'}`}
                 onClick={() => setIsConfirming(prev => !prev)}>
-            {isConfirming ? 'Cancelar' : 'Eliminar'}
+            {isConfirming ? labelCancel : label}
         </button>
         <button type="button" className={`confirm-button btn btn-danger${isConfirming ? ' visible' : ''}`} onClick={handleConfirm}>
-            Seguro?
+            {labelConfirm}
         </button>
     </div>
 }

@@ -1,5 +1,7 @@
 import { CSSProperties, MouseEvent, ReactNode, useState } from "react";
+import classNames from "classnames";
 import { FloatingOptions, useFloating } from "@lib/hooks/floating";
+import '@styles/components/floating.scss';
 
 export interface FloatingProps {
     isOpen: boolean;
@@ -30,11 +32,7 @@ export default function Floating({
     if (!isOpen) return null;
 
     return (
-        <div
-            ref={floatingRef}
-            className={className}
-            style={{ ...floatingStyle, ...style }}
-        >
+        <div ref={floatingRef} className={classNames('floating', className)} style={{ ...floatingStyle, ...style }}>
             {children}
         </div>
     );

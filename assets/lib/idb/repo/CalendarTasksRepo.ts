@@ -1,19 +1,19 @@
 import { AbstractRepo } from "@lib/idb/repo/abstracts";
-import { Rem } from "@lib/idb/rem";
-import { DayInfo } from "@lib/calendar/WeekInfo";
+import rem, { Rem } from "@lib/idb/rem";
+import TaskEvent from "@lib/calendar/TaskEvent";
 import { Task } from "@type/Model";
 
 export default class CalendarTasksRepo extends AbstractRepo {
 
-    private calendarTasksByDay: Record<number, CalendarTask[]> = {};
+    private taskEventsByDay: Record<number, TaskEvent[]> = {};
 
     constructor(rem: Rem) {
         super('', rem)
     }
 
-    async initWeek(startUnixSeconds: number, endUnixSeconds: number): Promise<Record<number, CalendarTask[]>> {
+    async initWeek(startUnixSeconds: number, endUnixSeconds: number): Promise<Record<number, TaskEvent[]>> {
         return CalendarTasksRepo.singletonAsync(this, `initWeek${startUnixSeconds}${endUnixSeconds}`, async () => {
-            this.calendarTasksByDay = {};
+            this.taskEventsByDay = {};
 
             const timers = await this.rem.timers.fetchTimersInDateRange(startUnixSeconds, endUnixSeconds);
             const tasksIds = [...new Set(timers.map(timer => timer.taskId))];
@@ -22,23 +22,30 @@ export default class CalendarTasksRepo extends AbstractRepo {
             for (const timer of timers) {
                 const task = tasks[timer.taskId];
                 const project = task?.projectId ? this.rem.projects.getProject(task.projectId) : null;
-                const calendarTask = new CalendarTask(
+                const taskEvent = new TaskEvent(
                     timer.id, timer.taskId, task?.name ?? '', timer.start, timer.end, project?.color ?? '#c999b3'
                 );
-                const dayOfMonth = calendarTask.startInfo.dayOfMonth;
-                this.setCalendarTaskByDay(dayOfMonth, calendarTask);
+                const dayOfMonth = taskEvent.startInfo.dayOfMonth;
+                this.setCalendarTaskByDay(dayOfMonth, taskEvent);
                 // TODO si end abarcar mas de dos dias y si dura mas de una semana parar
-                if (calendarTask.overlapsMidnight) {
-                    this.setCalendarTaskByDay(calendarTask.endInfo.dayOfMonth, calendarTask);
+                if (taskEvent.overlapsMidnight) {
+                    this.setCalendarTaskByDay(taskEvent.endInfo.dayOfMonth, taskEvent);
                 }
             }
             // console.log(this.calendarTasksByDay)
-            return this.calendarTasksByDay;
+            return this.taskEventsByDay;
         })
     }
 
-    getDayTasks(dayOfMonth: number): CalendarTask[] {
-        return this.calendarTasksByDay[dayOfMonth] ?? [];
+    getDayTasks(dayOfMonth: number): TaskEvent[] {
+        return this.taskEventsByDay[dayOfMonth] ?? [];
+    }
+
+    async removeDayTask(taskEventRemove: TaskEvent): Promise<void> {
+        const dayOfMonth = taskEventRemove.startInfo.dayOfMonth;
+        await rem.timers.deleteTimer(taskEventRemove.stopwatchId);
+        this.taskEventsByDay[dayOfMonth] = this.taskEventsByDay[dayOfMonth]
+            .filter(taskEvent => taskEvent.stopwatchId !== taskEventRemove.stopwatchId);
     }
 
     private async fetchTasksByIds(tasksIds: number []): Promise<Record<number, Task>> {
@@ -50,57 +57,10 @@ export default class CalendarTasksRepo extends AbstractRepo {
         return tasksByIds;
     }
 
-    private setCalendarTaskByDay(dayOfMonth: number, calendarTask: CalendarTask): void {
-        if (!this.calendarTasksByDay[dayOfMonth]) {
-            this.calendarTasksByDay[dayOfMonth] = [];
+    private setCalendarTaskByDay(dayOfMonth: number, taskEvent: TaskEvent): void {
+        if (!this.taskEventsByDay[dayOfMonth]) {
+            this.taskEventsByDay[dayOfMonth] = [];
         }
-        this.calendarTasksByDay[dayOfMonth].push(calendarTask);
-    }
-}
-
-class CalendarTask {
-    private _startInfo: DayInfo|null = null;
-    private _endInfo: DayInfo|false = false;
-    constructor(
-        public readonly timerId: number,
-        public readonly taskId: number,
-        public readonly name: string,
-        public readonly start: number,
-        public readonly end: number|null,
-        public readonly color: string,
-    ) {}
-
-    get startInfo() : DayInfo {
-        return this._startInfo ? this._startInfo : this._startInfo = new DayInfo(this.start);
-    }
-    get endInfo() : DayInfo|null {
-        return this._endInfo ? this._endInfo : this._endInfo = new DayInfo(this.end ?? Math.floor(Date.now() / 1000));
-        // return this._endInfo !== false ? this._endInfo : (this._endInfo = this.end ? new DayInfo(this.end) : null);
-    }
-
-    get timestampDuration() : number {
-        return this.end ? this.end - this.start : 0;
-    }
-
-    get minutesDuration() : number {
-        return this.endInfo.minuteOfDay - this.startInfo.minuteOfDay;
-    }
-
-    get overlapsMidnight(): boolean {
-        return this.end && this.endInfo.dayOfMonth !== this.startInfo.dayOfMonth
-    }
-
-    getMinuteOfDay(dayOfMonth: number): number {
-        return !this.overlapsMidnight || this.startInfo.dayOfMonth == dayOfMonth
-            ? this.startInfo.minuteOfDay
-            : 0;
-    }
-    getMinutesDuration(dayOfMonth: number): number {
-        if (!this.overlapsMidnight) {
-            return this.endInfo.minuteOfDay - this.startInfo.minuteOfDay;
-        }
-        return this.startInfo.dayOfMonth == dayOfMonth
-            ? 1440 - this.startInfo.minuteOfDay
-            : this.endInfo.minuteOfDay;
+        this.taskEventsByDay[dayOfMonth].push(taskEvent);
     }
 }
