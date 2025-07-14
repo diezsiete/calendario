@@ -94,6 +94,25 @@ export class Rem extends SingletonAsync {
         await tx.done;
     }
 
+    async clearAllStores() {
+        const tx = this.db.transaction(this.db.objectStoreNames, 'readwrite');
+        for (const storeName of this.db.objectStoreNames) {
+            const store = tx.objectStore(storeName);
+            await store.clear();
+        }
+        await tx.done;
+    }
+    async clearDataStores() {
+        // kanbanColumns no se debe limpiar (por ahora)
+        const storeNames = Array.from(this.db.objectStoreNames).filter(storeName => storeName !== this.kanbanColumns.store)
+        const tx = this.db.transaction(storeNames, 'readwrite');
+        for (const storeName of storeNames) {
+            const store = tx.objectStore(storeName);
+            await store.clear();
+        }
+        await tx.done;
+    }
+
     private setDatabaseStorageValues(name: string, version: number) {
         storage.set('db', name);
         storage.set('dbv', version);

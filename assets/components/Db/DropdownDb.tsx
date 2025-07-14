@@ -27,6 +27,8 @@ export default function DropdownDb() {
         })
     }
 
+    const handleDbClear = () => rem.clearDataStores().then(() => dbDispatch(rem.dbName));
+
     const dbColor = (db: string): string => db === 'calendario' ? 'success' : 'warning-alt'
 
     return <Dropdown title='Db' menuEnd btnClassName={`btn-outline-${dbColor(dbActive)}`}>
@@ -44,6 +46,11 @@ export default function DropdownDb() {
             Import DB
             <input className="d-none" type="file" accept=".json" onChange={handleUploadRestoreFile} ref={inputFileRef}/>
         </DropdownItemButton>
+        {dbActive !== 'calendario' &&
+            <DropdownItemButton onClick={handleDbClear}>
+                Clear DB
+            </DropdownItemButton>
+        }
     </Dropdown>
 }
 
@@ -53,7 +60,9 @@ export function handleUploadRestoreFile(event: ChangeEvent) {
 
     reader.onload = async (e) => {
         const json = JSON.parse(e.target.result as any);
+        await rem.clearAllStores();
         await rem.import(json);
+
         alert('Database restored!');
         window.location.reload()
     };
