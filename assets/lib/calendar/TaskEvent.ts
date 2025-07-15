@@ -33,14 +33,14 @@ export default class TaskEvent {
         return this.end && this.endInfo.dayOfMonth !== this.startInfo.dayOfMonth
     }
 
-    getMinuteOfDay(dayOfMonth: number): number {
+    getMinuteOfDay(dayOfMonth: number, zoom: 1|2|4|12 = 1): number {
         return !this.overlapsMidnight || this.startInfo.dayOfMonth == dayOfMonth
-            ? this.startInfo.minuteOfDay
+            ? this.startInfo.minuteOfDay * zoom
             : 0;
     }
-    getMinutesDuration(dayOfMonth: number): number {
+    getMinutesDuration(dayOfMonth: number, zoom: 1|2|4|12 = 1): number {
         if (!this.overlapsMidnight) {
-            return this.endInfo.minuteOfDay - this.startInfo.minuteOfDay;
+            return (this.endInfo.minuteOfDay - this.startInfo.minuteOfDay) * zoom;
         }
         return this.startInfo.dayOfMonth == dayOfMonth
             ? 1440 - this.startInfo.minuteOfDay
