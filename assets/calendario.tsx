@@ -5,9 +5,9 @@ import ProjectContextProvider from "@components/Project/ProjectContextProvider";
 import { TaskModalContextProvider } from "@components/Task/TaskContextProvider";
 import Navbar from "@components/Navbar";
 import TaskModal from "@components/Task/TaskModal";
-import '@styles/calendario.scss';
 import CalendarContextProvider from "@components/Calendario/CalendarContextProvider";
 import CalendarGrid from "@components/Calendario/CalendarGrid";
+import '@styles/calendario.scss';
 
 const root = createRoot(document.getElementById("root"));
 root.render(

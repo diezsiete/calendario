@@ -3,12 +3,16 @@
 .task.card {
     margin-bottom: 1rem;
 
-    @at-root .kanban-column & {
-        border-color: $dark-alt;
+    @at-root [data-bs-theme=dark] .kanban-column & {
+        --#{$prefix}card-border-color: #{$dark-alt};
     }
     &:hover {
-        border-color: rgba(255, 255, 255, 0.55);
+        --#{$prefix}card-border-color: #{$dark-alt};
+        @at-root [data-bs-theme=dark] & {
+            --#{$prefix}card-border-color: rgba(255, 255, 255, 0.55);
+        }
     }
+
     .card-body {
         cursor: pointer;
     }
@@ -19,13 +23,20 @@
     &.is-overlay-dragging {
         opacity: 0.75;
     }
+
     &.is-sortable-dragging {
-        background-color: $dark-soft;
-        --bs-card-title-color: #{$dark-soft};
-        --bs-card-color: #{$dark-soft};
-        --bs-card-cap-bg: #{$dark-soft};
+        --is-sortable-dragging-color: #{$gray-300};
+        @at-root [data-bs-theme=dark] & {
+            --is-sortable-dragging-color: #{$dark-soft};
+        }
+        --#{$prefix}card-border-color: var(--is-sortable-dragging-color);
+        --#{$prefix}card-title-color: var(--is-sortable-dragging-color);
+        --#{$prefix}card-color: var(--is-sortable-dragging-color);
+        --#{$prefix}card-cap-bg: var(--is-sortable-dragging-color);
+
+        background-color: var(--is-sortable-dragging-color);
         .btn.timer-button {
-            color: $dark-soft;
+            color: var(--is-sortable-dragging-color);
         }
         .form-select {
             background-image: none;

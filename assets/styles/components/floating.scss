@@ -1,9 +1,11 @@
 @import "@styles/abstract";
 
 .floating {
+    --floating-bg: var(--#{$prefix}body-bg);
     padding: 1rem;
     color: var(--#{$prefix}body-color);
-    background-color: var(--#{$prefix}body-bg);
+    background-color: var(--floating-bg);
     border: 1px solid var(--#{$prefix}border-color-translucent);
     border-radius: var(--#{$prefix}border-radius);
+    box-shadow: var(--#{$prefix}box-shadow)
 }

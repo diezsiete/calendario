@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" data-bs-theme="dark">
+<html lang="es">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +8,13 @@
         {% block stylesheets %}
             {{ encore_entry_link_tags('app') }}
         {% endblock %}
+
+        <script>
+            const getPreferredColorScheme = () => window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            const setTheme = () => document.documentElement.setAttribute('data-bs-theme', getPreferredColorScheme());
+            setTheme();
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setTheme)
+        </script>
 
         {% block javascripts %}
             {{ encore_entry_script_tags('app') }}

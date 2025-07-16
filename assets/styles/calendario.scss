@@ -1,10 +1,15 @@
 @import 'base';
 @import 'components/calendario/now-marker';
 
-$calendar-grid-boder-color: rgba(255, 255, 255, 0.15);
-
 html, body {
     height: 100%;
+}
+
+body {
+    --calendar-grid-border-color: #b6b7b8;
+    @at-root [data-bs-theme=dark] & {
+        --calendar-grid-border-color: #434549;
+    }
 }
 
 .calendario-container {
@@ -27,10 +32,18 @@ html, body {
     position: relative;
 }
 
-.time-column {
-    border-right: 1px solid $calendar-grid-boder-color;
+.time-column, .day-column {
     display: flex;
     flex-direction: column;
+    border-right: 1px solid var(--calendar-grid-border-color);
+
+    .calendar-grid-header & {
+        border-bottom: 1px solid var(--calendar-grid-border-color);
+    }
+}
+
+.day-column {
+    position: relative; /* Important for absolute positioning of events */
 }
 
 .time-slot {
@@ -44,12 +57,18 @@ html, body {
         top: 0;
         transform: translate(-10%, -50%);
     }
-}
+    &:first-child span {
+        display: none;
+    }
 
-.day-column {
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid $calendar-grid-boder-color;
+    .calendar-grid-header & {
+        display: flex;
+    }
+    button.zoom {
+        flex-grow: 1;
+        padding: 0;
+        border: none;
+    }
 }
 
 .day-header {
@@ -59,23 +78,14 @@ html, body {
     justify-content: center;
     font-weight: bold;
     font-size: 14px;
-    border-bottom: 1px solid $calendar-grid-boder-color;
 }
 
 .hour-cell {
     height: 60px;
-    border-bottom: 1px solid $calendar-grid-boder-color;
+    border-bottom: 1px solid var(--calendar-grid-border-color);
     position: relative;
     cursor: pointer;
     transition: background-color 0.2s ease;
-}
-
-
-.day-column {
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid $calendar-grid-boder-color;
-    position: relative; /* Important for absolute positioning of events */
 }
 
 /* Current time indicator (sample styling) */

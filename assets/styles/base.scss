@@ -15,9 +15,29 @@
     @include button-outline-variant($warning-alt);
 }
 
-// si .navbar-task-stopwatch titulo es muy largo se mantenga dentro del navbar
-#root > .navbar .navbar-collapse {
-    min-width: 0;
+.btn-outline {
+    --bs-btn-border-color: var(--#{$prefix}body-color);
+    --bs-btn-hover-color: black;
+    --bs-btn-hover-border-color: var(--#{$prefix}body-color);
+    --bs-btn-disabled-color: #4e4f51;
+    --bs-btn-disabled-border-color: #4e4f51;
+    @at-root [data-bs-theme=dark] & {
+        --bs-btn-hover-color: white;
+        --bs-btn-disabled-color: #f8f9fa;
+        --bs-btn-disabled-border-color: #f8f9fa;
+    }
+}
+
+#root > .navbar {
+    --navbar-border-bottom-color: #00000026;
+    @at-root [data-bs-theme=dark] & {
+        --navbar-border-bottom-color: #4a4f53;
+    }
+    border-bottom: 1px solid var(--navbar-border-bottom-color);
+    // si .navbar-task-stopwatch titulo es muy largo se mantenga dentro del navbar
+    .navbar-collapse {
+        min-width: 0;
+    }
 }
 
 .break-words-smart {

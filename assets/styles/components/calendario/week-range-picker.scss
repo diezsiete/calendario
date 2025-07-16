@@ -7,11 +7,11 @@
 
         button.navigate-week {
             flex-grow: 0;
+        }
 
-            color: var(--bs-btn-disabled-color);
-            background-color: var(--bs-btn-disabled-bg);
-            border-color: var(--bs-btn-disabled-border-color);
-            opacity: var(--bs-btn-disabled-opacity);
+        button.week-label {
+            border-right: none;
+            border-left: none;
         }
     }
 }

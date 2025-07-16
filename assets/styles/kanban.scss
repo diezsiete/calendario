@@ -43,7 +43,10 @@ main {
     }
 
     &-content {
-        background-color: $dark-alt;
+        background-color: #f5f1f5;
+        @at-root [data-bs-theme=dark] & {
+            background-color: $dark-alt;
+        }
         display: flex;
         flex-direction: column;
         border-radius: $card-border-radius;
